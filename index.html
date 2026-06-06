@@ -1,509 +1,494 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rakaso598의 게시물 피드</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <title>Monolog | 나의 기록</title>
+
+    <script>
+        const DIARY_FILES = [
+            // 여기에 날짜 작성
+            // 여기에 날짜 작성
+            // 여기에 날짜 작성
+            '260606',
+            // 여기에 날짜 작성
+            // 여기에 날짜 작성
+            // 여기에 날짜 작성
+        ];
+        
+        const ITEMS_PER_PAGE = 4; // 한 페이지에 보여줄 일기 개수
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <style>
-        /* 웹폰트 임포트 */
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto:wght@400;500;700&display=swap');
-
-        /* 공통 디자인 시스템 변수 정의 (모든 포트폴리오 페이지와 통일) */
+        /* 기본 라이트 모드 컬러 팔레트 */
         :root {
-            /* 컬러 팔레트 */
-            --color-primary: #3498db;
-            /* 주요 액션 버튼, 강조 색상 */
-            --color-secondary: #2980b9;
-            /* 호버 시 색상, 보조 강조 색상 */
-            --color-text-dark: #2c3e50;
-            /* 진한 텍스트 (제목 등) */
-            --color-text-medium: #7f8c8d;
-            /* 중간 톤 텍스트 (본문 등) */
-            --color-text-light: #95a5a6;
-            /* 밝은 톤 텍스트 (날짜, 작은 글씨) */
-            --color-background: #f4f8fa;
-            /* 페이지 전체 배경 색상 */
-            --color-card-background: #fff;
-            /* 카드, 컨테이너 배경 색상 */
-            --color-border: #e0e0e0;
-            /* 구분선, 테두리 색상 */
-            --color-skill-tag-bg: #e7f5ff;
-            /* 기술 스택 태그 배경 색상 */
-            --color-skill-tag-text: #3498db;
-            /* 기술 스택 태그 텍스트 색상 */
-            --color-gnb-shadow: rgba(0, 0, 0, 0.08);
-            /* GNB 그림자 */
-            --color-card-shadow: rgba(0, 0, 0, 0.06);
-            /* 카드 그림자 */
-
-            /* 게시글 특정 색상 추가 (새롭게 정의하여 통일성 유지) */
-            --color-post-border: #e1e4e8;
-            --color-author: #34495e;
-            --color-timestamp: #7f8c8d;
-            --color-post-text: #333;
-            --color-no-profile-bg: #e1e4e8;
-
-
-            /* 폰트 사이즈 */
-            --font-size-body: 1rem;
-            /* 기본 본문 폰트 사이즈 (16px) */
-            --font-size-small: 0.875rem;
-            /* 작은 글씨 (14px) */
-            --font-size-h1: 2.5rem;
-            /* 메인 타이틀 (예: 포트폴리오 h1) */
-            --font-size-h2: 2rem;
-            /* 섹션 타이틀 */
-            --font-size-h3: 1.5rem;
-            /* 프로젝트 타이틀 */
-            --font-size-gnb-logo: 1.5rem;
-            /* GNB 로고 폰트 사이즈 */
-            --font-size-gnb-menu: 1rem;
-            /* GNB 메뉴 폰트 사이즈 */
-            --font-size-emph: 1.125rem;
-            /* 강조 텍스트 */
-
-
-            /* 간격 */
-            --spacing-xs: 5px;
-            --spacing-sm: 10px;
-            --spacing-md: 15px;
-            --spacing-lg: 20px;
-            --spacing-xl: 50px;
-            --spacing-xxl: 80px;
-
-            /* 기타 */
-            --border-radius-sm: 8px;
-            /* 작은 반경 (버튼, 태그) */
-            --border-radius-md: 12px;
-            /* 중간 반경 (카드, 컨테이너) */
-            --border-radius-lg: 16px;
-            /* 큰 반경 */
-            --box-shadow-light: 0 6px 12px var(--color-card-shadow);
-            --box-shadow-medium: 0 8px 16px rgba(0, 0, 0, 0.1);
-            --box-shadow-strong: 0 12px 24px var(--color-gnb-shadow);
+            --bg-color: #fcfbf9;
+            --card-bg: #ffffff;
+            --text-main: #222222;
+            --text-sub: #888888;
+            --border-color: #f0eee9;
+            --btn-bg-hover: #222222;
+            --btn-text-hover: #ffffff;
+            --icon-bg-hover: #f0eee9;
+            --shadow-color: rgba(0, 0, 0, 0.03);
+            --transition-speed: 0.3s;
         }
 
-        /* Body 기본 스타일 설정 */
-        body {
-            font-family: 'Noto Sans KR', Arial, sans-serif;
-            background-color: var(--color-background);
-            /* 배경색 통일 */
+        /* 다크 모드 컬러 팔레트 */
+        body.dark-mode {
+            --bg-color: #171717;
+            --card-bg: #212121;
+            --text-main: #ececec;
+            --text-sub: #999999;
+            --border-color: #333333;
+            --btn-bg-hover: #ececec;
+            --btn-text-hover: #171717;
+            --icon-bg-hover: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            /* 줄 간격 설정 */
-            color: var(--color-text-dark);
-            /* 기본 텍스트 색상 통일 */
-            font-size: var(--font-size-body);
-            /* 기본 폰트 사이즈 통일 */
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', 'Noto Serif KR', serif;
+            line-height: 1.75;
+            letter-spacing: -0.015em;
+            word-break: keep-all;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
             -webkit-font-smoothing: antialiased;
-            /* 폰트 부드럽게 */
         }
 
-        /* Container 스타일 - 최대 너비, 중앙 정렬, 패딩 통일 (포트폴리오와 유사하게 조정) */
+        /* 중앙 정렬 컨테이너 */
         .container {
-            max-width: 960px;
-            /* 포트폴리오 페이지와 동일한 너비 */
-            margin: var(--spacing-xl) auto;
-            /* 상단 여백은 GNB 높이를 고려하여 조정 */
-            padding: var(--spacing-xl);
-            /* 포트폴리오 페이지와 일관된 패딩 */
-            background-color: var(--color-card-background);
-            /* 컨테이너 배경색 */
-            box-shadow: var(--box-shadow-strong);
-            /* 강한 그림자 */
-            border-radius: var(--border-radius-lg);
-            /* 큰 반경 */
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 80px 24px;
         }
 
-        /* Post (게시글) 스타일 - Project 섹션과 유사하게 조정 */
-        .post {
-            background: var(--color-card-background);
-            /* 카드 배경색 통일 */
-            border-radius: var(--border-radius-md);
-            /* 카드 모서리 둥글기 통일 */
-            box-shadow: var(--box-shadow-light);
-            /* 카드 그림자 통일 */
-            margin-bottom: var(--spacing-xl);
-            /* 게시글 간 하단 여백 (포트폴리오의 project와 유사하게) */
-            overflow: hidden;
-            /* 자식 요소의 둥근 모서리 유지 */
-            padding: var(--spacing-lg);
-            /* 카드 내부 패딩 추가 */
-            border: 1px solid var(--color-border);
-            /* 테두리 추가 */
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            /* 호버 효과 */
-        }
-
-        .post:hover {
-            transform: translateY(-8px);
-            /* 호버 시 약간 위로 이동 */
-            box-shadow: var(--box-shadow-strong);
-            /* 호버 시 그림자 강화 */
-        }
-
-        /* Post Header (게시글 헤더) 스타일 */
-        .post-header {
-            display: flex;
-            align-items: center;
-            padding-bottom: var(--spacing-md);
-            /* 일관된 패딩 */
-            border-bottom: 1px solid var(--color-post-border);
-            /* 구분선 색상 */
-            margin-bottom: var(--spacing-md);
-            /* 헤더와 내용 사이 간격 */
-        }
-
-        .post-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            /* 원형 프로필 이미지 */
-            margin-right: var(--spacing-sm);
-            /* 프로필 이미지와 텍스트 사이 간격 */
-            background-color: var(--color-no-profile-bg);
-            /* 프로필 이미지 없을 때 배경색 */
-            object-fit: cover;
-            /* 이미지가 영역을 채우도록 */
-        }
-
-        .post-header .author {
-            font-weight: bold;
-            font-size: var(--font-size-body);
-            /* 본문 폰트 사이즈와 일관성 유지 */
-            color: var(--color-author);
-            /* 작성자 이름 색상 */
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .post-header .timestamp {
-            font-size: var(--font-size-small);
-            /* 작은 글씨 폰트 사이즈 통일 */
-            color: var(--color-timestamp);
-            /* 타임스탬프 색상 */
-        }
-
-        /* Post Content (게시글 내용) 스타일 */
-        .post-content {
-            /* padding은 post 자체에 포함되었으므로 여기서는 제거하거나 최소화 */
-            font-size: var(--font-size-body);
-            /* 본문 폰트 사이즈와 일관성 유지 */
-            color: var(--color-post-text);
-            /* 게시글 본문 텍스트 색상 */
-            line-height: 1.7;
-            /* 본문 줄 간격 */
-        }
-
-        .post-content img {
-            width: 100%;
-            max-height: 400px;
-            /* 게시글 이미지 최대 높이 증가 (더 시원하게 보이도록) */
-            object-fit: contain;
-            /* 이미지가 잘리지 않고 전체 보이도록 contain 사용 */
-            border-radius: var(--border-radius-sm);
-            /* 이미지 모서리 둥글게 */
-            margin-top: var(--spacing-md);
-            /* 이미지 상단 여백 증가 */
-            margin-bottom: var(--spacing-md);
-            /* 이미지 하단 여백 추가 */
-            display: block;
-            /* 이미지 하단 불필요한 여백 제거 */
-        }
-
-        /* GNB (Global Navigation Bar) - 메인 페이지와 동일한 스타일 유지 */
-        .gnb {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background-color: var(--color-card-background);
-            box-shadow: 0 2px 5px var(--color-gnb-shadow);
-            padding: var(--spacing-sm) var(--spacing-lg);
-            /* 일관된 패딩 */
+        /* 헤더 디자인 */
+        header {
+            margin-bottom: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--color-border);
-            height: 50px;
-            /* GNB의 일관된 높이 */
-            box-sizing: border-box;
-            /* 패딩을 높이 계산에 포함 */
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            transition: border-color var(--transition-speed);
         }
 
-        .gnb .logo {
-            font-size: var(--font-size-gnb-logo);
-            /* GNB 로고 폰트 사이즈 통일 */
-            font-weight: bold;
-            color: var(--color-text-dark);
-            /* 로고 색상 */
-            font-family: 'Roboto', sans-serif;
+        .brand h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 4px;
         }
 
-        .gnb .menu {
+        .brand p {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 300;
+        }
+
+        /* 헤더 우측 컨트롤 (소셜 아이콘 & 테마 버튼) */
+        .header-actions {
             display: flex;
-            gap: var(--spacing-md);
-            /* 메뉴 항목 간 일관된 간격 */
             align-items: center;
+            gap: 12px;
         }
 
-        .gnb .menu a {
+        /* 소셜 아이콘 링크 버튼 */
+        .icon-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: var(--text-main);
             text-decoration: none;
-            font-size: var(--font-size-gnb-menu);
-            /* GNB 메뉴 폰트 사이즈 통일 */
-            color: var(--color-text-medium);
-            /* GNB 메뉴 텍스트 색상 */
-            transition: color 0.3s ease-in-out;
-            /* 부드러운 전환 효과 */
+            transition: background-color var(--transition-speed), color var(--transition-speed), transform 0.2s;
         }
 
-        .gnb .menu a:hover {
-            color: var(--color-text-dark);
-            /* 호버 시 텍스트 색상 변경 */
+        .icon-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
         }
 
-        /* Hamburger Menu Icon */
-        .hamburger {
-            display: none; /* Hidden by default on desktop */
-            flex-direction: column;
-            justify-content: space-around;
-            width: 24px;
-            height: 20px;
+        .icon-link:hover {
+            background-color: var(--icon-bg-hover);
+            transform: translateY(-2px);
+        }
+
+        /* 테마 변경 버튼 전용 */
+        #themeBtn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            z-index: 1100; /* Above the menu for clicking */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color var(--transition-speed), transform 0.2s;
+        }
+        
+        #themeBtn:hover {
+            background-color: var(--icon-bg-hover);
+            transform: translateY(-2px);
         }
 
-        .hamburger span {
+        /* 공통 버튼 (이전/다음 페이지 등) */
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--btn-bg-hover);
+            color: var(--btn-text-hover);
+            border-color: var(--btn-bg-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 일기 리스트 스트림 */
+        .diary-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* 일기 카드 디자인 */
+        .diary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .diary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--shadow-color);
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 날짜(제목) 영역 */
+        .diary-header {
+            margin-bottom: 32px;
+        }
+
+        .diary-title-date {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 4px;
+        }
+
+        .diary-sub-date {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* === 마크다운 본문 디테일 스타일링 === */
+        .diary-content {
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .diary-content p { margin-bottom: 1.6em; }
+        .diary-content p:last-child { margin-bottom: 0; }
+        
+        .diary-content h1, .diary-content h2, .diary-content h3 { 
+            margin: 1.8em 0 0.8em 0; 
+            color: var(--text-main); 
+            font-weight: 600;
+        }
+        .diary-content h1 { font-size: 1.4rem; }
+        .diary-content h2 { font-size: 1.2rem; }
+        
+        .diary-content blockquote {
+            border-left: 3px solid var(--text-main);
+            padding-left: 16px;
+            color: var(--text-sub);
+            margin: 1.8em 0;
+            font-style: italic;
+        }
+
+        .diary-content ul, .diary-content ol {
+            margin-left: 20px;
+            margin-bottom: 1.6em;
+        }
+        .diary-content li { margin-bottom: 0.5em; }
+
+        .diary-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1.5em 0;
             display: block;
-            width: 100%;
-            height: 2px;
-            background-color: var(--color-text-dark);
-            border-radius: 1px;
-            transition: all 0.3s ease-in-out;
         }
 
-        /* Responsive Design - Media Queries */
-        @media (max-width: 768px) {
-            :root {
-                /* 태블릿 크기에서 폰트 사이즈 조정 */
-                --font-size-body: 0.95rem;
-                --font-size-small: 0.85rem;
-                --font-size-h1: 2rem;
-                --font-size-h2: 1.8rem;
-                --font-size-h3: 1.3rem;
-                --font-size-gnb-logo: 1.3rem;
-                --font-size-gnb-menu: 0.9rem;
-            }
+        .diary-content hr {
+            border: 0;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 2.5em 0;
+        }
 
-            .container {
-                padding: var(--spacing-lg);
-                /* 태블릿에서 패딩 유지 또는 약간 줄임 */
-                margin: var(--spacing-md) auto;
-                /* 상하 마진 조정 */
-            }
+        .diary-content a { color: var(--text-main); text-decoration: underline; text-underline-offset: 3px; }
+        .diary-content code { 
+            background: rgba(150, 150, 150, 0.1); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 0.9em;
+        }
 
-            .gnb {
-                flex-direction: row; /* Keep logo and hamburger on the same line */
-                align-items: center;
-                height: 50px; /* Fixed height for mobile GNB */
-                padding: var(--spacing-sm) var(--spacing-lg);
-            }
+        /* 페이지네이션 */
+        .pagination {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
 
-            .gnb .menu {
-                display: none; /* Hide menu by default */
-                flex-direction: column;
-                position: absolute;
-                top: 50px; /* Position below GNB */
-                left: 0;
-                width: 100%;
-                background-color: var(--color-card-background);
-                box-shadow: var(--box-shadow-strong);
-                padding: var(--spacing-md) 0;
-                border-top: 1px solid var(--color-border);
-                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-                transform: translateY(-100%); /* Start off-screen */
-                opacity: 0;
-                pointer-events: none; /* Prevent interaction when hidden */
-            }
+        .page-info {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
 
-            .gnb .menu.active {
-                display: flex; /* Show menu when active */
-                transform: translateY(0); /* Slide in */
-                opacity: 1;
-                pointer-events: all; /* Allow interaction */
-            }
+        .status-msg {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            padding: 60px 0;
+        }
 
-            .gnb .menu a {
-                padding: var(--spacing-md) var(--spacing-lg);
-                width: 92%;
-                text-align: center;
-                border: 1px solid var(--color-border);
-                /* Add dividers between menu items */
-                box-sizing: border-box;
-                border-radius: var(--border-radius-md);
+        footer {
+            margin-top: 100px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================= */
+        /* [모바일 대응] 화면이 작아질 때 스타일 변화  */
+        /* ========================================= */
+        @media screen and (max-width: 640px) {
+            .container { padding: 40px 20px; }
+            header {
+                flex-direction: column; /* 모바일에서는 세로 배치 */
+                align-items: flex-start;
+                gap: 20px;
+                margin-bottom: 40px;
+                padding-bottom: 24px;
+            }
+            .brand h1 { font-size: 1.4rem; }
+            .brand p { font-size: 0.75rem; }
+            
+            .diary-stream { gap: 24px; }
+            
+            .diary-card {
+                padding: 30px 24px;
+                border-radius: 12px;
             }
             
-            .hamburger {
-                display: flex; /* Show hamburger icon on mobile */
-            }
-
-            .post {
-                margin-bottom: var(--spacing-lg);
-                /* 모바일에서는 게시물 간 간격 조정 */
-                padding: var(--spacing-md);
-                /* 카드 내부 패딩 조정 */
-            }
-        }
-
-        @media (max-width: 480px) {
-            :root {
-                /* 모바일 크기에서 폰트 사이즈 조정 */
-                --font-size-body: 0.9rem;
-                --font-size-small: 0.8rem;
-                --font-size-h1: 1.8rem;
-                --font-size-h2: 1.5rem;
-                --font-size-h3: 1.2rem;
-            }
-
-            .container {
-                padding: var(--spacing-md);
-                /* 모바일에서 더 작은 패딩 */
-                margin: var(--spacing-sm) auto;
-                /* 상하 마진 조정 */
-            }
-
-            .post-header {
-                padding-bottom: var(--spacing-sm);
-                margin-bottom: var(--spacing-sm);
-            }
-
-            .post {
-                padding: var(--spacing-sm);
-            }
-
-            .post-content img {
-                max-height: 250px;
-                /* 모바일 이미지 최대 높이 조정 */
-                margin-top: var(--spacing-sm);
-                margin-bottom: var(--spacing-sm);
-            }
+            .diary-title-date { font-size: 1.3rem; }
+            .diary-content { font-size: 0.95rem; }
+            
+            .pagination { margin-top: 50px; gap: 16px; }
+            .btn { padding: 8px 16px; font-size: 0.8rem; }
         }
     </style>
 </head>
-
 <body>
 
-    <nav class="gnb" aria-label="Global Navigation Bar">
-        <a href="https://rakaso598.github.io/" style="text-decoration: none;">
-            <div class="logo">rakaso598</div>
-        </a>
-        <div class="hamburger" id="hamburger-menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <div class="menu" id="gnb-menu">
-            <a href="https://github.com/rakaso598/" rel="noopener noreferrer">GitHub</a>
-            <a href="https://rexondex.tistory.com/" rel="noopener noreferrer">Blog</a>
-            <a href="https://rakaso598.github.io/portfolio/" rel="noopener noreferrer">포트폴리오</a>
-            <a href="https://rexondex.tistory.com/guestbook/" rel="noopener noreferrer">방명록</a>
-        </div>
-    </nav>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>Monolog</h1>
+                <p>나의 조각난 하루들을 엮는 공간</p>
+            </div>
+            
+            <div class="header-actions">
+                <a href="https://x.com/rexon_dex" target="_blank" title="@rexon_dex" class="icon-link">
+                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+                <a href="https://github.com/rexondex" target="_blank" title="rexondex" class="icon-link">
+                    <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+                <button id="themeBtn" title="다크/라이트 모드 전환">🌓</button>
+            </div>
+        </header>
 
-    <main class="container" id="feed" aria-live="polite">
-    </main>
+        <main class="diary-stream" id="diaryContainer">
+            <div class="status-msg">기록을 조심스럽게 꺼내는 중입니다...</div>
+        </main>
+
+        <div class="pagination">
+            <button class="btn" id="prevBtn" disabled>이전</button>
+            <span class="page-info" id="pageInfo">1 / 1</span>
+            <button class="btn" id="nextBtn" disabled>다음</button>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 MONOLOG. ALL RIGHTS RESERVED.</p>
+        </footer>
+    </div>
 
     <script>
-        // Hamburger menu functionality
-        const hamburger = document.getElementById('hamburger-menu');
-        const gnbMenu = document.getElementById('gnb-menu');
+        let currentPage = 1;
+        let sortedFiles = [];
 
-        if (hamburger && gnbMenu) {
-            hamburger.addEventListener('click', () => {
-                gnbMenu.classList.toggle('active');
-            });
+        const diaryContainer = document.getElementById('diaryContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const themeBtn = document.getElementById('themeBtn');
 
-            // Close menu when a link is clicked (optional, good for single-page apps)
-            gnbMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    gnbMenu.classList.remove('active');
-                });
-            });
+        function getSubDateText(filename) {
+            if (filename.length !== 6) return '';
+            const yy = parseInt(filename.substring(0, 2), 10);
+            const mm = parseInt(filename.substring(2, 4), 10) - 1;
+            const dd = parseInt(filename.substring(4, 6), 10);
+            const dateObj = new Date(2000 + yy, mm, dd);
+            
+            if (isNaN(dateObj.getTime())) return '';
+            
+            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const dayStr = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+            return `${dateStr} &nbsp;&middot;&nbsp; ${dayStr}`;
         }
 
+        async function fetchDiaryCard(filename) {
+            try {
+                const response = await fetch(`./daily/${filename}.md`);
+                if (!response.ok) throw new Error();
+                const markdownText = await response.text();
+                const htmlContent = marked.parse(markdownText);
+                const subDate = getSubDateText(filename);
 
-        // JSON 데이터를 비동기적으로 가져와서 페이지에 게시글을 렌더링합니다.
-        fetch('/items/items.json')
-            .then(response => {
-                // 응답이 성공적인지 확인
-                if (!response.ok) {
-                    // HTTP 에러 상태 (예: 404 Not Found)인 경우 에러 발생
-                    throw new Error(`HTTP error! Status: ${response.status} - Failed to load JSON file`);
-                }
-                return response.json(); // 응답을 JSON 객체로 파싱
-            })
-            .then(data => {
-                const feed = document.getElementById('feed'); // 'feed' 컨테이너 요소를 가져옴
-
-                // 데이터를 최신 게시물이 먼저 오도록 역순 정렬
-                data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-
-                // 데이터 배열을 순회하며 각 게시글에 대한 HTML 요소를 생성
-                data.forEach(post => {
-                    const postElement = document.createElement('article'); // 각 게시글을 <article> 태그로 감싸 시맨틱하게 구성
-                    postElement.className = 'post'; // CSS 스타일 적용을 위한 클래스 추가
-
-                    // 프로필 이미지 경로가 유효한지 확인하고, 없으면 기본 스타일 적용
-                    const profileImageSrc = post.profile_image ? post.profile_image : '';
-                    const profileImageAlt = post.profile_image ? `${post.author}의 프로필 이미지` : '기본 프로필 이미지';
-                    const profileImageStyle = !post.profile_image ? 'background-color: var(--color-no-profile-bg);' : '';
-
-                    // 게시글 헤더 HTML 문자열 생성
-                    const header = `
-                        <div class="post-header">
-                            <img src="${profileImageSrc}" alt="${profileImageAlt}" style="${profileImageStyle}">
-                            <div>
-                                <div class="author">${post.author}</div>
-                                <div class="timestamp">${post.timestamp}</div>
-                            </div>
+                return `
+                    <article class="diary-card">
+                        <div class="diary-header">
+                            <div class="diary-title-date">${filename}</div>
+                            <div class="diary-sub-date">${subDate}</div>
                         </div>
-                    `;
-
-                    // 게시글 내용 HTML 문자열 생성
-                    const content = `
-                        <div class="post-content">
-                            <p>${post.content}</p>
-                            ${post.image ? `<img src="${post.image}" alt="게시글 이미지: ${post.author}의 ${post.timestamp} 게시물">` : ''}
+                        <div class="diary-content">
+                            ${htmlContent}
                         </div>
-                    `;
+                    </article>
+                `;
+            } catch (err) {
+                return `
+                    <article class="diary-card" style="border: 1px dashed red; box-shadow: none;">
+                        <div class="diary-header">
+                            <div class="diary-title-date" style="color: #d32f2f;">${filename}</div>
+                        </div>
+                        <div class="diary-content" style="color: #d32f2f; font-size: 0.9rem;">
+                            ⚠️ 파일을 불러올 수 없습니다. 경로(daily/${filename}.md)를 확인해 주세요.
+                        </div>
+                    </article>
+                `;
+            }
+        }
 
-                    // 생성된 HTML을 게시글 요소에 삽입
-                    postElement.innerHTML = header + content;
-                    // 'feed' 컨테이너에 게시글 요소 추가
-                    feed.appendChild(postElement);
-                });
-            })
-            .catch(error => {
-                // JSON 로딩 또는 파싱 중 발생한 에러를 콘솔에 출력
-                console.error('Error loading or parsing JSON:', error);
-                const feed = document.getElementById('feed');
-                feed.innerHTML = `<p style="text-align: center; color: var(--color-text-medium);">게시물을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.</p>`;
-                // [확장성 대비] 사용자에게 오류 메시지를 표시하는 UI를 추가할 수 있습니다.
-            });
+        async function displayPage(page) {
+            diaryContainer.innerHTML = '<div class="status-msg">기록을 조심스럽게 꺼내는 중입니다...</div>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        /*
-            [확장성 대비] 무한 스크롤 또는 페이지네이션 기능을 추가할 수 있습니다.
-            window.addEventListener('scroll', () => {
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-                    // 더 많은 게시물을 로드하는 함수 호출 (예: loadMorePosts())
-                }
-            });
-        */
+            const startIndex = (page - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            const pageFiles = sortedFiles.slice(startIndex, endIndex);
+
+            if (pageFiles.length === 0) {
+                diaryContainer.innerHTML = '<div class="status-msg">아직 기록된 일기가 없습니다.</div>';
+                return;
+            }
+
+            let htmlAccumulator = '';
+            for (const file of pageFiles) {
+                htmlAccumulator += await fetchDiaryCard(file);
+            }
+            diaryContainer.innerHTML = htmlAccumulator;
+
+            const totalPages = Math.ceil(sortedFiles.length / ITEMS_PER_PAGE) || 1;
+            pageInfo.textContent = `${page} / ${totalPages}`;
+            prevBtn.disabled = (page === 1);
+            nextBtn.disabled = (page === totalPages);
+        }
+
+        function initDiary() {
+            sortedFiles = [...DIARY_FILES].sort((a, b) => b.localeCompare(a));
+            displayPage(currentPage);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPage(currentPage);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(sortedFiles.length / ITEMS_PER_PAGE);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPage(currentPage);
+            }
+        });
+
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        document.addEventListener('DOMContentLoaded', initDiary);
     </script>
-
 </body>
-
 </html>
