@@ -28,31 +28,31 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
-        /* 기본 라이트 모드 컬러 팔레트 */
+        /* [수정 1] 기본(:root)을 다크 모드(블랙) 컬러 팔레트로 설정 */
         :root {
-            --bg-color: #fcfbf9;
-            --card-bg: #ffffff;
-            --text-main: #222222;
-            --text-sub: #888888;
-            --border-color: #f0eee9;
-            --btn-bg-hover: #222222;
-            --btn-text-hover: #ffffff;
-            --icon-bg-hover: #f0eee9;
-            --shadow-color: rgba(0, 0, 0, 0.03);
-            --transition-speed: 0.3s;
-        }
-
-        /* 다크 모드 컬러 팔레트 */
-        body.dark-mode {
-            --bg-color: #171717;
-            --card-bg: #212121;
-            --text-main: #ececec;
+            --bg-color: #171717;      /* 눈이 편안한 차콜 블랙 배경 */
+            --card-bg: #212121;       /* 짙은 그레이 카드 */
+            --text-main: #ececec;     /* 세련된 웜 화이트 텍스트 */
             --text-sub: #999999;
             --border-color: #333333;
             --btn-bg-hover: #ececec;
             --btn-text-hover: #171717;
             --icon-bg-hover: #333333;
             --shadow-color: rgba(0, 0, 0, 0.3);
+            --transition-speed: 0.3s;
+        }
+
+        /* [수정 2] 버튼 누르면 적용될 .light-mode(화이트) 컬러 팔레트 */
+        body.light-mode {
+            --bg-color: #fcfbf9;      /* 아주 은은한 아이보리 웜 화이트 */
+            --card-bg: #ffffff;       /* 순백색 카드 */
+            --text-main: #222222;     /* 고급스러운 먹색 텍스트 */
+            --text-sub: #888888;
+            --border-color: #f0eee9;
+            --btn-bg-hover: #222222;
+            --btn-text-hover: #ffffff;
+            --icon-bg-hover: #f0eee9;
+            --shadow-color: rgba(0, 0, 0, 0.03);
         }
 
         * {
@@ -72,14 +72,12 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 중앙 정렬 컨테이너 */
         .container {
             max-width: 760px;
             margin: 0 auto;
             padding: 80px 24px;
         }
 
-        /* 헤더 디자인 */
         header {
             margin-bottom: 60px;
             display: flex;
@@ -104,14 +102,12 @@
             font-weight: 300;
         }
 
-        /* 헤더 우측 컨트롤 (소셜 아이콘 & 테마 버튼) */
         .header-actions {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        /* 소셜 아이콘 링크 버튼 */
         .icon-link {
             display: flex;
             align-items: center;
@@ -135,7 +131,6 @@
             transform: translateY(-2px);
         }
 
-        /* 테마 변경 버튼 전용 */
         #themeBtn {
             background: none;
             border: none;
@@ -156,7 +151,6 @@
             transform: translateY(-2px);
         }
 
-        /* 공통 버튼 (이전/다음 페이지 등) */
         .btn {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -181,14 +175,12 @@
             cursor: not-allowed;
         }
 
-        /* 일기 리스트 스트림 */
         .diary-stream {
             display: flex;
             flex-direction: column;
             gap: 40px;
         }
 
-        /* 일기 카드 디자인 */
         .diary-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -210,7 +202,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 날짜(제목) 영역 */
         .diary-header {
             margin-bottom: 32px;
         }
@@ -232,7 +223,6 @@
             letter-spacing: 0.05em;
         }
 
-        /* === 마크다운 본문 디테일 스타일링 === */
         .diary-content {
             font-size: 1rem;
             color: var(--text-main);
@@ -289,7 +279,6 @@
             font-size: 0.9em;
         }
 
-        /* 페이지네이션 */
         .pagination {
             margin-top: 80px;
             display: flex;
@@ -321,13 +310,10 @@
             letter-spacing: 0.05em;
         }
 
-        /* ========================================= */
-        /* [모바일 대응] 화면이 작아질 때 스타일 변화  */
-        /* ========================================= */
         @media screen and (max-width: 640px) {
             .container { padding: 40px 20px; }
             header {
-                flex-direction: column; /* 모바일에서는 세로 배치 */
+                flex-direction: column;
                 align-items: flex-start;
                 gap: 20px;
                 margin-bottom: 40px;
@@ -382,7 +368,7 @@
         </div>
 
         <footer>
-            <p>&copy; 2026 MONOLOG. ALL RIGHTS RESERVED.</p>
+            <p>&copy; 2026 MONOLOG BY REXONDEX. ALL RIGHTS RESERVED.</p>
         </footer>
     </div>
 
@@ -488,8 +474,9 @@
             }
         });
 
+        // [수정 3] 자바스크립트 토글 대상을 'dark-mode'에서 'light-mode'로 변경
         themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
         });
 
         document.addEventListener('DOMContentLoaded', initDiary);
