@@ -166,34 +166,45 @@
         .diary-stream {
             display: flex;
             flex-direction: column;
-            gap: 0;
-            border-top: 1px solid var(--border-color);
+            gap: 72px;
         }
 
         .diary-card {
-            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            background: transparent;
             border: 0;
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 52px 32px 58px;
-            margin: 0 -32px;
+            border-radius: 0;
+            padding: 0 0 0 30px;
+            margin: 0;
             box-shadow: none;
             opacity: 0;
             transform: translateY(15px);
             animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            transition: border-color var(--transition-speed), opacity var(--transition-speed), background-color var(--transition-speed);
+            transition: opacity var(--transition-speed);
         }
 
-        .diary-card:nth-child(even) {
-            background: rgba(255, 255, 255, 0.04);
+        .diary-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.35rem;
+            width: 2px;
+            height: 72px;
+            border-radius: 999px;
+            background: linear-gradient(to bottom, var(--text-main), transparent);
+            opacity: 0.28;
         }
 
-        body.light-mode .diary-card {
-            background: rgba(0, 0, 0, 0.01);
-        }
-
-        body.light-mode .diary-card:nth-child(even) {
-            background: rgba(0, 0, 0, 0.02);
+        .diary-card::after {
+            content: "";
+            position: absolute;
+            left: -3px;
+            top: 0.35rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-main);
+            opacity: 0.4;
         }
 
         .diary-card:hover {
@@ -268,10 +279,11 @@
 
         .diary-content hr {
             border: 0;
-            height: 2px;
-            background: linear-gradient(to right, var(--border-color) 0%, transparent 100%);
-            margin: 2.5em 0;
-            opacity: 0.5;
+            width: 96px;
+            height: 1px;
+            background: var(--border-color);
+            margin: 2.8em auto;
+            opacity: 0.85;
         }
 
         .diary-content a { color: var(--text-main); text-decoration: underline; text-underline-offset: 3px; }
@@ -326,9 +338,16 @@
             .brand h1 { font-size: 1.4rem; }
             .brand p { font-size: 0.75rem; }
             
+            .diary-stream {
+                gap: 56px;
+            }
+
             .diary-card {
-                padding: 38px 20px 44px;
-                margin: 0 -20px;
+                padding: 0 0 0 20px;
+            }
+
+            .diary-card::before {
+                height: 60px;
             }
             
             .diary-title-date { font-size: 1.3rem; }
