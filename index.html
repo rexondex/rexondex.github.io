@@ -171,16 +171,29 @@
         }
 
         .diary-card {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.02);
             border: 0;
             border-bottom: 1px solid var(--border-color);
-            border-radius: 0;
-            padding: 46px 0 52px;
+            border-radius: 4px;
+            padding: 52px 32px 58px;
+            margin: 0 -32px;
             box-shadow: none;
             opacity: 0;
             transform: translateY(15px);
             animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            transition: border-color var(--transition-speed), opacity var(--transition-speed);
+            transition: border-color var(--transition-speed), opacity var(--transition-speed), background-color var(--transition-speed);
+        }
+
+        .diary-card:nth-child(even) {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        body.light-mode .diary-card {
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        body.light-mode .diary-card:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
         }
 
         .diary-card:hover {
@@ -255,9 +268,10 @@
 
         .diary-content hr {
             border: 0;
-            height: 1px;
-            background-color: var(--border-color);
+            height: 2px;
+            background: linear-gradient(to right, var(--border-color) 0%, transparent 100%);
             margin: 2.5em 0;
+            opacity: 0.5;
         }
 
         .diary-content a { color: var(--text-main); text-decoration: underline; text-underline-offset: 3px; }
@@ -313,7 +327,8 @@
             .brand p { font-size: 0.75rem; }
             
             .diary-card {
-                padding: 34px 0 38px;
+                padding: 38px 20px 44px;
+                margin: 0 -20px;
             }
             
             .diary-title-date { font-size: 1.3rem; }
