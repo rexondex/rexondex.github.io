@@ -27,11 +27,11 @@
             --btn-text-hover: #171717;
             --icon-bg-hover: #333333;
             --shadow-color: rgba(0, 0, 0, 0.3);
-            --badge-accent: #55c7a6;
-            --badge-bg: rgba(85, 199, 166, 0.09);
-            --badge-bg-hover: rgba(85, 199, 166, 0.15);
-            --badge-border: rgba(85, 199, 166, 0.24);
-            --badge-ring: rgba(85, 199, 166, 0.18);
+            --badge-accent: #ececec;
+            --badge-bg: rgba(255, 255, 255, 0.035);
+            --badge-bg-hover: rgba(255, 255, 255, 0.075);
+            --badge-border: rgba(255, 255, 255, 0.14);
+            --badge-marker: rgba(236, 236, 236, 0.72);
             --transition-speed: 0.3s;
         }
 
@@ -46,11 +46,11 @@
             --btn-text-hover: #ffffff;
             --icon-bg-hover: #f0eee9;
             --shadow-color: rgba(0, 0, 0, 0.03);
-            --badge-accent: #158f73;
-            --badge-bg: rgba(21, 143, 115, 0.08);
-            --badge-bg-hover: rgba(21, 143, 115, 0.13);
-            --badge-border: rgba(21, 143, 115, 0.22);
-            --badge-ring: rgba(21, 143, 115, 0.14);
+            --badge-accent: #222222;
+            --badge-bg: rgba(0, 0, 0, 0.025);
+            --badge-bg-hover: rgba(0, 0, 0, 0.055);
+            --badge-border: rgba(0, 0, 0, 0.13);
+            --badge-marker: rgba(34, 34, 34, 0.64);
         }
 
         * {
@@ -252,48 +252,47 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 16px;
         }
 
         .diary-link-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            min-height: 34px;
+            gap: 9px;
+            min-height: 30px;
             max-width: 100%;
-            padding: 6px 12px 6px 10px;
+            padding: 6px 10px;
             border: 1px solid var(--badge-border);
-            border-radius: 999px;
-            background: linear-gradient(135deg, var(--badge-bg), transparent);
+            border-radius: 6px;
+            background: var(--badge-bg);
             color: var(--text-main);
             text-decoration: none;
             font-family: 'Inter', sans-serif;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             line-height: 1;
-            box-shadow: 0 14px 34px var(--shadow-color);
-            transition: transform 0.2s, background-color var(--transition-speed), border-color var(--transition-speed);
+            box-shadow: none;
+            transition: transform 0.2s, background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
         }
 
         .diary-link-badge::before {
             content: "";
             flex: 0 0 auto;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--badge-accent);
-            box-shadow: 0 0 0 4px var(--badge-ring);
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+            background: var(--badge-marker);
         }
 
         .diary-link-badge:hover {
-            border-color: var(--badge-accent);
+            border-color: var(--text-main);
             background: var(--badge-bg-hover);
             transform: translateY(-1px);
         }
 
         .badge-kicker {
-            color: var(--badge-accent);
-            font-size: 0.64rem;
+            color: var(--text-sub);
+            font-size: 0.62rem;
             font-weight: 600;
             letter-spacing: 0;
             text-transform: uppercase;
