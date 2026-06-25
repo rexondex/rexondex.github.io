@@ -27,11 +27,9 @@
             --btn-text-hover: #171717;
             --icon-bg-hover: #333333;
             --shadow-color: rgba(0, 0, 0, 0.3);
-            --badge-accent: #ececec;
             --badge-bg: rgba(255, 255, 255, 0.035);
             --badge-bg-hover: rgba(255, 255, 255, 0.075);
             --badge-border: rgba(255, 255, 255, 0.14);
-            --badge-marker: rgba(236, 236, 236, 0.72);
             --transition-speed: 0.3s;
         }
 
@@ -46,11 +44,9 @@
             --btn-text-hover: #ffffff;
             --icon-bg-hover: #f0eee9;
             --shadow-color: rgba(0, 0, 0, 0.03);
-            --badge-accent: #222222;
             --badge-bg: rgba(0, 0, 0, 0.025);
             --badge-bg-hover: rgba(0, 0, 0, 0.055);
             --badge-border: rgba(0, 0, 0, 0.13);
-            --badge-marker: rgba(34, 34, 34, 0.64);
         }
 
         * {
@@ -154,18 +150,18 @@
             border: 1px solid var(--border-color);
             color: var(--text-main);
             padding: 8px 18px;
-            border-radius: 30px;
+            border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all var(--transition-speed);
+            transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
             font-family: 'Inter', sans-serif;
         }
 
         .btn:hover:not(:disabled) {
             background-color: var(--btn-bg-hover);
             color: var(--btn-text-hover);
-            border-color: var(--btn-bg-hover);
+            border-color: var(--text-main);
         }
 
         .btn:disabled {
@@ -263,7 +259,7 @@
             max-width: 100%;
             padding: 6px 10px;
             border: 1px solid var(--badge-border);
-            border-radius: 6px;
+            border-radius: 4px;
             background: var(--badge-bg);
             color: var(--text-main);
             text-decoration: none;
@@ -272,22 +268,12 @@
             font-weight: 600;
             line-height: 1;
             box-shadow: none;
-            transition: transform 0.2s, background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
-        }
-
-        .diary-link-badge::before {
-            content: "";
-            flex: 0 0 auto;
-            width: 7px;
-            height: 7px;
-            border-radius: 2px;
-            background: var(--badge-marker);
+            transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
         }
 
         .diary-link-badge:hover {
             border-color: var(--text-main);
             background: var(--badge-bg-hover);
-            transform: translateY(-1px);
         }
 
         .badge-kicker {
@@ -303,16 +289,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-
-        .badge-arrow {
-            color: var(--badge-accent);
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-        }
-
-        .diary-link-badge:hover .badge-arrow {
-            transform: translate(1px, -1px);
         }
 
         .diary-content {
@@ -574,7 +550,6 @@
                     <a class="diary-link-badge" href="${escapeHtml(badge.href)}" target="_blank" rel="noopener noreferrer">
                         <span class="badge-kicker">Evidence</span>
                         <span class="badge-label">${escapeHtml(badge.label)}</span>
-                        <span class="badge-arrow">↗</span>
                     </a>
                 </div>
             `;
