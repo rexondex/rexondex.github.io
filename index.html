@@ -958,8 +958,13 @@
 
         @media (max-width: 640px) {
             .shell {
-                width: min(100% - 24px, 1320px);
-                padding: 16px 0 28px;
+                width: 100%;
+                padding: max(14px, env(safe-area-inset-top)) 0 28px;
+            }
+
+            .site-header {
+                padding-right: max(16px, env(safe-area-inset-right));
+                padding-left: max(16px, env(safe-area-inset-left));
             }
 
             .brand-name {
@@ -978,7 +983,7 @@
 
             .intro {
                 gap: 22px;
-                padding: 56px 4px 36px;
+                padding: 52px max(20px, env(safe-area-inset-right)) 34px max(20px, env(safe-area-inset-left));
             }
 
             .intro h1 {
@@ -993,35 +998,56 @@
 
             .calendar-layout {
                 min-height: 0;
-                border-radius: 21px;
+                overflow: visible;
+                border-right: 0;
+                border-left: 0;
+                border-radius: 0;
             }
 
             .archive-nav {
-                padding: 18px 14px 14px;
+                overflow: hidden;
+                padding: 15px max(12px, env(safe-area-inset-right)) 13px max(12px, env(safe-area-inset-left));
             }
 
             .year-list {
-                margin-left: 3px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                margin: 0 0 8px;
+                padding: 1px 4px 3px;
+                scrollbar-width: none;
+                scroll-snap-type: x proximity;
+            }
+
+            .year-list::-webkit-scrollbar {
+                display: none;
             }
 
             .year-button {
+                flex: 0 0 auto;
                 padding: 7px 10px;
                 font-size: 0.76rem;
+                scroll-snap-align: center;
+            }
+
+            .month-list {
+                padding: 1px 4px 4px;
+                scroll-snap-type: x proximity;
             }
 
             .month-button {
                 min-height: 38px;
                 padding: 0 10px;
                 font-size: 0.72rem;
+                scroll-snap-align: center;
             }
 
             .calendar-panel {
-                padding: 25px 12px 19px;
+                padding: 24px max(8px, env(safe-area-inset-right)) 20px max(8px, env(safe-area-inset-left));
             }
 
             .calendar-toolbar {
                 margin-bottom: 22px;
-                padding: 0 5px;
+                padding: 0 8px;
             }
 
             .calendar-heading h2 {
@@ -1042,17 +1068,38 @@
             }
 
             .weekdays {
+                margin-bottom: 3px;
                 font-size: 0.58rem;
             }
 
+            .weekdays span {
+                padding: 6px 0;
+                font-size: 0;
+            }
+
+            .weekdays span::after {
+                content: attr(data-mobile);
+                font-size: 0.62rem;
+                letter-spacing: 0;
+            }
+
             .calendar-grid {
-                grid-template-rows: repeat(6, 59px);
+                grid-template-rows: repeat(6, 52px);
+                border-top: 0;
+                border-left: 0;
+                touch-action: pan-y;
+            }
+
+            .date-cell {
+                overflow: visible;
+                border-right: 0;
+                border-bottom: 0;
             }
 
             .date-button,
             .date-number {
-                width: 34px;
-                height: 34px;
+                width: 30px;
+                height: 30px;
                 font-size: 0.71rem;
             }
 
@@ -1064,25 +1111,49 @@
                 border-width: 2px;
             }
 
+            .date-button.is-evidence {
+                box-shadow:
+                    0 0 0 3px var(--surface-strong),
+                    0 0 0 4px var(--inverse),
+                    0 8px 18px color-mix(in srgb, var(--text) 18%, transparent);
+            }
+
+            .date-button.is-evidence::after {
+                right: -6px;
+                bottom: -6px;
+                width: 15px;
+                height: 15px;
+                border-width: 2px;
+                font-size: 0.46rem;
+            }
+
+            .date-button:hover,
+            .date-button.is-evidence:hover {
+                transform: none;
+            }
+
             .entry-caption {
                 display: none;
             }
 
             .calendar-legend {
-                margin: 16px 4px 0;
+                gap: 10px 20px;
+                margin: 14px 8px 0;
+                font-size: 0.64rem;
             }
 
             .site-footer {
-                padding: 26px 3px 0;
+                padding: 26px max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
             }
 
             .diary-dialog {
                 width: 100%;
+                height: 100dvh;
                 max-width: none;
-                max-height: calc(100dvh - 18px);
-                margin: auto 0 0;
-                border-width: 1px 0 0;
-                border-radius: 22px 22px 0 0;
+                max-height: 100dvh;
+                margin: 0;
+                border: 0;
+                border-radius: 0;
             }
 
             .diary-dialog[open] {
@@ -1097,16 +1168,17 @@
             }
 
             .dialog-frame {
-                max-height: calc(100dvh - 18px);
+                height: 100dvh;
+                max-height: 100dvh;
             }
 
             .dialog-topbar {
-                min-height: 62px;
-                padding: 0 12px 0 19px;
+                min-height: calc(62px + env(safe-area-inset-top));
+                padding: env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) 0 max(19px, env(safe-area-inset-left));
             }
 
             .dialog-scroll {
-                padding: 38px 24px 70px;
+                padding: 38px max(24px, env(safe-area-inset-right)) calc(70px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
             }
 
             .diary-heading {
@@ -1204,13 +1276,13 @@
                     </div>
 
                     <div class="weekdays" aria-hidden="true">
-                        <span>Mon</span>
-                        <span>Tue</span>
-                        <span>Wed</span>
-                        <span>Thu</span>
-                        <span>Fri</span>
-                        <span>Sat</span>
-                        <span>Sun</span>
+                        <span data-mobile="월">Mon</span>
+                        <span data-mobile="화">Tue</span>
+                        <span data-mobile="수">Wed</span>
+                        <span data-mobile="목">Thu</span>
+                        <span data-mobile="금">Fri</span>
+                        <span data-mobile="토">Sat</span>
+                        <span data-mobile="일">Sun</span>
                     </div>
                     <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="월간 달력"></div>
                     <div class="calendar-legend" aria-label="달력 표시 안내">
@@ -1266,6 +1338,8 @@
         let viewMonth = latestDate.getMonth();
         let activeEntry = '';
         let requestSequence = 0;
+        let suppressCalendarClick = false;
+        let calendarTouchStart = null;
 
         const yearList = document.getElementById('yearList');
         const monthList = document.getElementById('monthList');
@@ -1327,6 +1401,19 @@
             setView(target.getFullYear(), target.getMonth());
         }
 
+        function centerScrollableItem(container, item) {
+            if (!item || container.scrollWidth <= container.clientWidth) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const itemRect = item.getBoundingClientRect();
+            const left = container.scrollLeft
+                + itemRect.left
+                - containerRect.left
+                - ((containerRect.width - itemRect.width) / 2);
+
+            container.scrollTo({ left, behavior: 'smooth' });
+        }
+
         function renderArchiveNavigation() {
             const availableYears = [...new Set(diaryFiles.map((file) => parseDiaryDate(file).getFullYear()))]
                 .sort((a, b) => b - a);
@@ -1346,6 +1433,11 @@
                 return button;
             }));
 
+            const activeYearButton = yearList.querySelector('.is-active');
+            if (activeYearButton) {
+                requestAnimationFrame(() => centerScrollableItem(yearList, activeYearButton));
+            }
+
             monthList.replaceChildren(...monthNames.map((name, month) => {
                 const count = countEntries(viewYear, month);
                 const button = document.createElement('button');
@@ -1360,11 +1452,7 @@
 
             const activeMonthButton = monthList.querySelector('.is-active');
             if (activeMonthButton) {
-                requestAnimationFrame(() => activeMonthButton.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'center'
-                }));
+                requestAnimationFrame(() => centerScrollableItem(monthList, activeMonthButton));
             }
         }
 
@@ -1411,7 +1499,9 @@
                         'aria-label',
                         `${formatDate(date)}, ${hasEvidence ? '참고 링크가 있는 ' : ''}기록 열기`
                     );
-                    button.addEventListener('click', () => openDiary(filename));
+                    button.addEventListener('click', () => {
+                        if (!suppressCalendarClick) openDiary(filename);
+                    });
                     cell.append(button);
 
                     if (!isOutside) {
@@ -1650,6 +1740,37 @@
             event.preventDefault();
             closeDiary();
         });
+
+        calendarGrid.addEventListener('touchstart', (event) => {
+            if (!window.matchMedia('(max-width: 640px)').matches || event.touches.length !== 1) return;
+
+            calendarTouchStart = {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY
+            };
+        }, { passive: true });
+
+        calendarGrid.addEventListener('touchend', (event) => {
+            if (!calendarTouchStart || !window.matchMedia('(max-width: 640px)').matches) return;
+
+            const touch = event.changedTouches[0];
+            const distanceX = touch.clientX - calendarTouchStart.x;
+            const distanceY = touch.clientY - calendarTouchStart.y;
+            calendarTouchStart = null;
+
+            if (Math.abs(distanceX) < 48 || Math.abs(distanceX) <= Math.abs(distanceY) * 1.25) return;
+
+            event.preventDefault();
+            suppressCalendarClick = true;
+            moveMonth(distanceX < 0 ? 1 : -1);
+            window.setTimeout(() => {
+                suppressCalendarClick = false;
+            }, 250);
+        }, { passive: false });
+
+        calendarGrid.addEventListener('touchcancel', () => {
+            calendarTouchStart = null;
+        }, { passive: true });
 
         renderArchiveNavigation();
         renderCalendar();
