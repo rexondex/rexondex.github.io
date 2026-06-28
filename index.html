@@ -502,9 +502,38 @@
             content: "";
         }
 
+        .date-button.is-evidence {
+            box-shadow:
+                0 0 0 4px var(--surface-strong),
+                0 0 0 5px var(--inverse),
+                0 12px 28px color-mix(in srgb, var(--text) 24%, transparent);
+        }
+
+        .date-button.is-evidence::after {
+            display: grid;
+            right: -8px;
+            bottom: -8px;
+            width: 18px;
+            height: 18px;
+            place-items: center;
+            border-width: 3px;
+            color: var(--inverse-text);
+            content: "↗";
+            font-size: 0.54rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
         .date-button:hover {
             box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 25%, transparent);
             transform: translateY(-3px) scale(1.04);
+        }
+
+        .date-button.is-evidence:hover {
+            box-shadow:
+                0 0 0 4px var(--surface-strong),
+                0 0 0 5px var(--inverse),
+                0 16px 34px color-mix(in srgb, var(--text) 30%, transparent);
         }
 
         .date-cell.is-today .date-number {
@@ -526,21 +555,33 @@
             white-space: nowrap;
         }
 
-        .calendar-note {
+        .calendar-legend {
             display: flex;
             align-items: center;
-            gap: 9px;
+            flex-wrap: wrap;
+            gap: 12px 24px;
             margin: 20px 0 0;
             color: var(--muted);
             font-size: 0.7rem;
         }
 
-        .calendar-note::before {
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .legend-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: var(--inverse);
-            content: "";
+        }
+
+        .legend-dot.is-evidence {
+            box-shadow:
+                0 0 0 2px var(--surface-strong),
+                0 0 0 3px var(--inverse);
         }
 
         .empty-state {
@@ -610,12 +651,31 @@
             padding: 0 22px 0 28px;
         }
 
+        .diary-dialog.has-evidence .dialog-topbar {
+            background:
+                linear-gradient(90deg, color-mix(in srgb, var(--text) 7%, transparent), transparent 58%);
+        }
+
         .dialog-context {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
             color: var(--muted);
             font-size: 0.66rem;
             font-weight: 600;
             letter-spacing: 0.14em;
             text-transform: uppercase;
+        }
+
+        .diary-dialog.has-evidence .dialog-context::before {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--inverse);
+            box-shadow:
+                0 0 0 2px var(--surface-strong),
+                0 0 0 3px var(--inverse);
+            content: "";
         }
 
         .dialog-actions {
@@ -1008,7 +1068,7 @@
                 display: none;
             }
 
-            .calendar-note {
+            .calendar-legend {
                 margin: 16px 4px 0;
             }
 
@@ -1153,7 +1213,10 @@
                         <span>Sun</span>
                     </div>
                     <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="월간 달력"></div>
-                    <p class="calendar-note">동그라미가 표시된 날짜에 기록이 있습니다.</p>
+                    <div class="calendar-legend" aria-label="달력 표시 안내">
+                        <span class="legend-item"><span class="legend-dot" aria-hidden="true"></span>일반 기록</span>
+                        <span class="legend-item"><span class="legend-dot is-evidence" aria-hidden="true"></span>참고 링크가 있는 기록</span>
+                    </div>
                 </div>
             </section>
         </main>
@@ -1167,7 +1230,7 @@
     <dialog class="diary-dialog" id="diaryDialog" aria-label="일기 내용">
         <div class="dialog-frame">
             <div class="dialog-topbar">
-                <span class="dialog-context">Daily note</span>
+                <span class="dialog-context" id="dialogContext">Daily note</span>
                 <div class="dialog-actions">
                     <button id="previousEntry" type="button" aria-label="이전 기록">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
@@ -1193,6 +1256,7 @@
         )].sort();
 
         const entrySet = new Set(diaryFiles);
+        const evidenceEntries = new Set();
         const diaryCache = new Map();
         const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         const today = new Date();
@@ -1213,6 +1277,7 @@
         const nextMonth = document.getElementById('nextMonth');
         const themeButton = document.getElementById('themeButton');
         const diaryDialog = document.getElementById('diaryDialog');
+        const dialogContext = document.getElementById('dialogContext');
         const dialogScroll = document.getElementById('dialogScroll');
         const previousEntry = document.getElementById('previousEntry');
         const nextEntry = document.getElementById('nextEntry');
@@ -1322,6 +1387,7 @@
 
                 const filename = toFilename(date);
                 const hasEntry = entrySet.has(filename);
+                const hasEvidence = evidenceEntries.has(filename);
                 const isOutside = date.getMonth() !== viewMonth;
                 const isToday = (
                     date.getFullYear() === today.getFullYear() &&
@@ -1339,16 +1405,19 @@
                 if (hasEntry) {
                     const button = document.createElement('button');
                     button.type = 'button';
-                    button.className = 'date-button';
+                    button.className = `date-button${hasEvidence ? ' is-evidence' : ''}`;
                     button.textContent = date.getDate();
-                    button.setAttribute('aria-label', `${formatDate(date)}, 기록 열기`);
+                    button.setAttribute(
+                        'aria-label',
+                        `${formatDate(date)}, ${hasEvidence ? '참고 링크가 있는 ' : ''}기록 열기`
+                    );
                     button.addEventListener('click', () => openDiary(filename));
                     cell.append(button);
 
                     if (!isOutside) {
                         const caption = document.createElement('span');
                         caption.className = 'entry-caption';
-                        caption.textContent = 'written';
+                        caption.textContent = hasEvidence ? 'reference' : 'written';
                         cell.append(caption);
                     }
                 } else {
@@ -1458,10 +1527,27 @@
             return diary;
         }
 
+        async function discoverEvidenceEntries() {
+            const discoveries = await Promise.all(diaryFiles.map(async (filename) => {
+                try {
+                    const diary = await getDiary(filename);
+                    return diary.evidence ? filename : null;
+                } catch {
+                    return null;
+                }
+            }));
+
+            discoveries.filter(Boolean).forEach((filename) => evidenceEntries.add(filename));
+            renderCalendar();
+        }
+
         async function openDiary(filename) {
             if (!entrySet.has(filename)) return;
 
             activeEntry = filename;
+            const knownEvidence = evidenceEntries.has(filename);
+            diaryDialog.classList.toggle('has-evidence', knownEvidence);
+            dialogContext.textContent = knownEvidence ? 'Reference note' : 'Daily note';
             updateEntryNavigation();
             renderDialogLoading();
 
@@ -1477,6 +1563,10 @@
             try {
                 const diary = await getDiary(filename);
                 if (thisRequest !== requestSequence || activeEntry !== filename) return;
+
+                if (diary.evidence) evidenceEntries.add(filename);
+                diaryDialog.classList.toggle('has-evidence', Boolean(diary.evidence));
+                dialogContext.textContent = diary.evidence ? 'Reference note' : 'Daily note';
 
                 const html = typeof marked !== 'undefined'
                     ? marked.parse(diary.markdown)
@@ -1564,6 +1654,7 @@
         renderArchiveNavigation();
         renderCalendar();
         updateThemeButton();
+        discoverEvidenceEntries();
     </script>
 </body>
 </html>
