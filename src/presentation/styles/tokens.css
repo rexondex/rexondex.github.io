@@ -1,0 +1,27 @@
+:root,
+:root[data-theme="paper"] {
+  color-scheme: light;
+  --bg: #f0eee8; --panel: #f8f6f0; --ink: #191b19; --muted: #73736d;
+  --faint: #a6a49b; --line: #cfccc2; --line-soft: #dedbd2; --accent: #d94f32;
+  --accent-ink: #fff7f2; --entry: #252925; --entry-ink: #faf9f4;
+  --wash: rgba(39, 43, 39, .035); --overlay: rgba(15, 17, 15, .55);
+  --shadow: 0 30px 90px rgba(28, 27, 23, .18); --radius: 2px;
+  --font-display: "Noto Serif KR", serif; --font-ui: "Manrope", sans-serif; --font-mono: "DM Mono", monospace;
+}
+
+:root[data-theme="midnight"] {
+  color-scheme: dark;
+  --bg: #111317; --panel: #171a1f; --ink: #e9e8e3; --muted: #999b9d;
+  --faint: #696c70; --line: #363a40; --line-soft: #292d32; --accent: #e67759;
+  --accent-ink: #16100e; --entry: #d8d8d1; --entry-ink: #111317;
+  --wash: rgba(255,255,255,.025); --overlay: rgba(0,0,0,.76); --shadow: 0 35px 100px rgba(0,0,0,.55);
+}
+
+:root[data-theme="terminal"] {
+  color-scheme: dark;
+  --bg: #07120d; --panel: #0b1911; --ink: #b9e4c4; --muted: #6e9a79;
+  --faint: #476952; --line: #24442e; --line-soft: #173522; --accent: #d7ff67;
+  --accent-ink: #07120d; --entry: #9addaa; --entry-ink: #07120d;
+  --wash: rgba(127,255,159,.025); --overlay: rgba(0,8,3,.8); --shadow: 0 35px 100px rgba(0,0,0,.65);
+  --font-display: "DM Mono", monospace;
+}
