@@ -4,17 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f0eee8">
-  <meta name="description" content="날짜와 생각을 오래 보관하는 rexondex의 개인 디지털 아카이브">
+  <meta name="description" content="REXONDEX 날짜 기반 디지털 아카이브">
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-  <title>REXONDEX — Personal Archive</title>
+  <title>REXONDEX Archive</title>
   <script>
     (() => {
       const saved = localStorage.getItem('archive-theme');
       document.documentElement.dataset.theme = saved || 'light';
     })();
   </script>
-  <script src="./daily.js"></script>
-  <script>window.__DIARY_FILES__ = typeof DIARY_FILES === 'undefined' ? [] : DIARY_FILES;</script>
+  <script src="./database.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +24,6 @@
 <body>
   <div id="app"></div>
   <noscript>이 아카이브를 열려면 JavaScript를 활성화해주세요.</noscript>
-  <script type="module" src="./src/main.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

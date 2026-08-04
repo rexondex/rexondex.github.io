@@ -1,5 +1,142 @@
-import { dateToDiaryId, formatDate, parseDiaryId } from '../domain/diary.js';
-import { THEMES } from './theme-manager.js';
+(() => {
+'use strict';
+// Source: src/domain/diary.js
+const parseDiaryId = (id) => {
+  if (!/^\d{6}$/.test(String(id))) return null;
+  const year = 2000 + Number(id.slice(0, 2));
+  const month = Number(id.slice(2, 4)) - 1;
+  const day = Number(id.slice(4, 6));
+  const date = new Date(year, month, day);
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day ? date : null;
+};
+
+const dateToDiaryId = (date) => [
+  String(date.getFullYear()).slice(-2),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0')
+].join('');
+
+const formatDate = (date, weekday = true) => date.toLocaleDateString('ko-KR', {
+  year: 'numeric', month: 'long', day: 'numeric', ...(weekday ? { weekday: 'long' } : {})
+});
+
+const normalizeLink = (value) => {
+  const href = value.trim();
+  if (/^(https?:\/\/|mailto:|\/|\.\/|\.\.\/|#)/i.test(href)) return href;
+  if (/^(www\.|[a-z0-9.-]+\.[a-z]{2,})/i.test(href)) return `https://${href}`;
+  return '';
+};
+
+const parseDiaryMarkdown = (source) => {
+  const markdown = source.replace(/^\uFEFF/, '');
+  const lines = markdown.split(/\r?\n/);
+  const first = (lines[0] || '').trim();
+  const mdLink = first.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+  const bracketLink = first.match(/^\[([^\]]+)\]$/);
+  if (!mdLink && !bracketLink) return { markdown, reference: null };
+  const raw = (mdLink ? mdLink[2] : bracketLink[1]).trim();
+  const href = normalizeLink(raw);
+  if (!href) return { markdown, reference: null };
+  let label = mdLink?.[1]?.trim() || raw;
+  try { if (label === raw) label = new URL(href).hostname.replace(/^www\./, ''); } catch { /* local URL */ }
+  return { markdown: lines.slice(1).join('\n'), reference: { href, label } };
+};
+
+const createArchive = (rawIds) => {
+  const ids = [...new Set(rawIds.filter((id) => parseDiaryId(id)))].sort();
+  const idSet = new Set(ids);
+  const dates = ids.map(parseDiaryId);
+  return {
+    ids, idSet, dates,
+    latest: dates.at(-1) || new Date(),
+    years: [...new Set(dates.map((date) => date.getFullYear()))].sort((a, b) => b - a),
+    count(year, month = null) {
+      return dates.filter((date) => date.getFullYear() === year && (month === null || date.getMonth() === month)).length;
+    }
+  };
+};
+
+
+// Source: src/infrastructure/static-diary-repository.js
+
+class StaticDiaryRepository {
+  #cache = new Map();
+
+  constructor(records = {}) {
+    this.records = Object.freeze({ ...records });
+  }
+
+  async get(id) {
+    if (this.#cache.has(id)) return this.#cache.get(id);
+    if (!Object.hasOwn(this.records, id)) throw new Error(`Diary ${id}: not found`);
+    const entry = { id, ...parseDiaryMarkdown(this.records[id]) };
+    this.#cache.set(id, entry);
+    return entry;
+  }
+
+  async findReferenceIds(ids) {
+    const references = await Promise.all(ids.map(async (id) => (await this.get(id)).reference ? id : null));
+    return new Set(references.filter(Boolean));
+  }
+}
+
+
+// Source: src/application/archive-store.js
+class ArchiveStore extends EventTarget {
+  constructor(archive) {
+    super();
+    this.archive = archive;
+    this.state = {
+      year: archive.latest.getFullYear(), month: archive.latest.getMonth(),
+      activeId: null, referenceIds: new Set()
+    };
+  }
+  emit() { this.dispatchEvent(new CustomEvent('change', { detail: this.state })); }
+  view(year, month) { this.state.year = year; this.state.month = month; this.emit(); }
+  moveMonth(offset) {
+    const date = new Date(this.state.year, this.state.month + offset, 1);
+    this.view(date.getFullYear(), date.getMonth());
+  }
+  open(id) {
+    if (!this.archive.idSet.has(id)) return;
+    const date = this.archive.dates[this.archive.ids.indexOf(id)];
+    this.state.activeId = id; this.state.year = date.getFullYear(); this.state.month = date.getMonth(); this.emit();
+  }
+  close() { this.state.activeId = null; this.emit(); }
+  setReferences(ids) { this.state.referenceIds = ids; this.emit(); }
+  adjacent(offset) {
+    const index = this.archive.ids.indexOf(this.state.activeId);
+    return this.archive.ids[index + offset] || null;
+  }
+}
+
+
+// Source: src/presentation/theme-manager.js
+const THEMES = [
+  { id: 'light', name: 'Light', description: '밝은 화면' },
+  { id: 'dark', name: 'Dark', description: '어두운 화면' },
+  { id: 'contrast', name: 'High contrast', description: '고대비 화면' }
+];
+
+class ThemeManager extends EventTarget {
+  constructor(storage = localStorage) {
+    super(); this.storage = storage;
+    this.current = THEMES.some((theme) => theme.id === document.documentElement.dataset.theme)
+      ? document.documentElement.dataset.theme : 'light';
+    this.apply(this.current);
+  }
+  apply(id) {
+    if (!THEMES.some((theme) => theme.id === id)) return;
+    this.current = id; document.documentElement.dataset.theme = id;
+    this.storage.setItem('archive-theme', id);
+    const colors = { light: '#f6f7f9', dark: '#111318', contrast: '#000000' };
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
+    this.dispatchEvent(new CustomEvent('change', { detail: id }));
+  }
+}
+
+
+// Source: src/presentation/archive-app.js
 
 const icon = (name) => ({
   arrowLeft: '<path d="m15 18-6-6 6-6"/>', arrowRight: '<path d="m9 18 6-6-6-6"/>',
@@ -9,7 +146,7 @@ const icon = (name) => ({
 const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${icon(name)}</svg>`;
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-export class ArchiveApp {
+class ArchiveApp {
   constructor(deps) { Object.assign(this, deps); this.requestId = 0; }
 
   mount() {
@@ -112,3 +249,16 @@ export class ArchiveApp {
   openAdjacent(offset) { const id = this.store.adjacent(offset); if (id) this.openReader(id); }
   closeReader() { this.requestId++; this.els.reader.close(); document.body.classList.remove('dialog-open'); this.store.close(); }
 }
+
+
+// Source: src/main.js
+
+const records = window.ARCHIVE_DATABASE || {};
+const archive = createArchive(Object.keys(records));
+const repository = new StaticDiaryRepository(records);
+const store = new ArchiveStore(archive);
+const themes = new ThemeManager();
+
+new ArchiveApp({ root: document.querySelector('#app'), archive, repository, store, themes }).mount();
+
+})();
