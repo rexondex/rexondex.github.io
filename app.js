@@ -150,6 +150,14 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '
 const renderMarkdown = (markdown) => window.marked
   ? window.marked.parse(markdown)
   : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
+const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
+  <a href="https://rexondex.github.io" target="_blank" rel="noopener"><span>Website<small>rexondex.github.io</small></span>${svg('external')}</a>
+  <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>rexondex.tistory.com</small></span>${svg('external')}</a>
+  <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>u/rexondex</small></span>${svg('external')}</a>
+  <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>@rexon-dex</small></span>${svg('external')}</a>
+  <a href="https://x.com/rexon_dex" target="_blank" rel="noopener"><span>X<small>@rexon_dex</small></span>${svg('external')}</a>
+</div>`;
 
 class ArchiveApp {
   constructor(deps) { Object.assign(this, deps); this.activeView = 'feed'; }
@@ -176,10 +184,10 @@ class ArchiveApp {
           <div class="calendar-tools"><nav id="yearNav" class="year-nav" aria-label="연도 선택"></nav><div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('left')}</button><button data-move="1" aria-label="다음 달">${svg('right')}</button></div></div>
           <div class="calendar-card"><header><h2 id="calendarTitle"></h2><span id="monthMeta"></span></header><nav class="month-nav" id="monthNav" aria-label="월 선택"></nav><div class="weekday-row" aria-hidden="true"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div><div class="calendar-grid" id="calendar" role="grid"></div></div>
         </section>
-        <section class="view profile-view" id="profileView" aria-labelledby="profileTitle" hidden><div class="profile-card"><div class="avatar">R</div><div><h1 id="profileTitle">rexondex</h1><p>@rexondex</p></div></div><dl><div><dt>작성한 날</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최근 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><a class="profile-link" href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub ${svg('external')}</a></section>
+        <section class="view profile-view" id="profileView" aria-labelledby="profileTitle" hidden><div class="profile-card">${profileImage}<div><h1 id="profileTitle">rexondex</h1><p>@rexondex</p></div></div><dl><div><dt>작성한 날</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최근 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><h2 class="profile-section-title">링크</h2>${socialLinks()}</section>
         <section class="view settings-view" id="settingsView" aria-labelledby="settingsTitle" hidden><header class="view-header"><h1 id="settingsTitle">설정</h1><p>화면 표시 방식을 선택합니다.</p></header><div class="setting-group"><h2>화면 모드</h2>${THEMES.map((theme) => `<button type="button" data-theme-id="${theme.id}"><span>${theme.name}<small>${theme.description}</small></span><b>✓</b></button>`).join('')}</div></section>
       </main>
-      <aside class="right-panel"><div class="mini-profile"><div class="avatar">R</div><div><strong>rexondex</strong><span>@rexondex</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><a href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub에서 보기</a></aside>
+      <aside class="right-panel"><div class="mini-profile">${profileImage}<div><strong>rexondex</strong><span>@rexondex</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl>${socialLinks(true)}</aside>
       <nav class="bottom-nav" aria-label="주요 메뉴">${this.navItems()}</nav>
     </div>`; }
 
@@ -204,7 +212,7 @@ class ArchiveApp {
     this.els.feedList.innerHTML = '<div class="feed-loading">기록을 정리하는 중...</div>';
     const posts = await Promise.all([...this.archive.ids].reverse().map(async (id) => {
       const entry = await this.repository.get(id), date = parseDiaryId(id);
-      return `<article class="diary-post" id="entry-${id}"><header><div class="post-avatar">R</div><div><strong>rexondex</strong><time datetime="20${id.slice(0,2)}-${id.slice(2,4)}-${id.slice(4,6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
+      return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0,2)}-${id.slice(2,4)}-${id.slice(4,6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
     }));
     this.els.feedList.innerHTML = posts.join('');
   }
