@@ -1,23 +1,16 @@
 :root, :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --text: #17191c;
-  --muted: #626872; --subtle: #8b929d; --border: #d9dde3; --border-strong: #b9c0c9;
-  --accent: #1457d9; --accent-hover: #0d46b5; --accent-soft: #e8efff; --on-accent: #ffffff;
-  --record: #1d2430; --reference: #d3451d; --focus: #005fcc; --overlay: rgba(13, 18, 28, .58);
-  --shadow: 0 18px 50px rgba(26, 34, 48, .14);
+  --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f2f2ef; --text: #151515;
+  --muted: #696969; --subtle: #9a9a96; --border: #deded9; --border-strong: #ababaa;
+  --accent: #151515; --accent-hover: #333333; --accent-soft: #ececea; --on-accent: #ffffff;
+  --record: #171717; --record-on: #ffffff; --focus: #151515;
+  --overlay: rgba(0, 0, 0, .55); --shadow: 0 18px 50px rgba(0, 0, 0, .14);
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111318; --surface: #181b21; --surface-2: #20242c; --text: #edf0f5;
-  --muted: #a5acb7; --subtle: #757d89; --border: #333842; --border-strong: #4a515e;
-  --accent: #78a7ff; --accent-hover: #9bbdff; --accent-soft: #1d3155; --on-accent: #08142b;
-  --record: #dce5f4; --reference: #ff8c69; --focus: #9ec0ff; --overlay: rgba(0, 0, 0, .72);
-  --shadow: 0 22px 60px rgba(0, 0, 0, .5);
-}
-:root[data-theme="contrast"] {
-  color-scheme: dark;
-  --bg: #000; --surface: #000; --surface-2: #111; --text: #fff; --muted: #fff; --subtle: #d8d8d8;
-  --border: #fff; --border-strong: #fff; --accent: #ffea00; --accent-hover: #fff36b;
-  --accent-soft: #252200; --on-accent: #000; --record: #fff; --reference: #00ffff;
-  --focus: #ffea00; --overlay: rgba(0,0,0,.85); --shadow: none;
+  --bg: #151515; --surface: #1b1b1b; --surface-2: #222222; --text: #f1f1ee;
+  --muted: #aaaaa5; --subtle: #747470; --border: #393937; --border-strong: #595956;
+  --accent: #f1f1ee; --accent-hover: #ffffff; --accent-soft: #30302e; --on-accent: #151515;
+  --record: #f1f1ee; --record-on: #151515; --focus: #ffffff;
+  --overlay: rgba(0, 0, 0, .75); --shadow: 0 22px 60px rgba(0, 0, 0, .5);
 }

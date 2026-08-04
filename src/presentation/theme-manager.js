@@ -1,7 +1,6 @@
 export const THEMES = [
-  { id: 'light', name: 'Light', description: '밝은 화면' },
-  { id: 'dark', name: 'Dark', description: '어두운 화면' },
-  { id: 'contrast', name: 'High contrast', description: '고대비 화면' }
+  { id: 'light', name: '밝게', description: '흰색 배경' },
+  { id: 'dark', name: '어둡게', description: '검은색 배경' }
 ];
 
 export class ThemeManager extends EventTarget {
@@ -15,7 +14,7 @@ export class ThemeManager extends EventTarget {
     if (!THEMES.some((theme) => theme.id === id)) return;
     this.current = id; document.documentElement.dataset.theme = id;
     this.storage.setItem('archive-theme', id);
-    const colors = { light: '#f6f7f9', dark: '#111318', contrast: '#000000' };
+    const colors = { light: '#f7f7f5', dark: '#151515' };
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
     this.dispatchEvent(new CustomEvent('change', { detail: id }));
   }

@@ -113,9 +113,8 @@ class ArchiveStore extends EventTarget {
 
 // Source: src/presentation/theme-manager.js
 const THEMES = [
-  { id: 'light', name: 'Light', description: '밝은 화면' },
-  { id: 'dark', name: 'Dark', description: '어두운 화면' },
-  { id: 'contrast', name: 'High contrast', description: '고대비 화면' }
+  { id: 'light', name: '밝게', description: '흰색 배경' },
+  { id: 'dark', name: '어둡게', description: '검은색 배경' }
 ];
 
 class ThemeManager extends EventTarget {
@@ -129,7 +128,7 @@ class ThemeManager extends EventTarget {
     if (!THEMES.some((theme) => theme.id === id)) return;
     this.current = id; document.documentElement.dataset.theme = id;
     this.storage.setItem('archive-theme', id);
-    const colors = { light: '#f6f7f9', dark: '#111318', contrast: '#000000' };
+    const colors = { light: '#f7f7f5', dark: '#151515' };
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
     this.dispatchEvent(new CustomEvent('change', { detail: id }));
   }
@@ -138,116 +137,86 @@ class ThemeManager extends EventTarget {
 
 // Source: src/presentation/archive-app.js
 
-const icon = (name) => ({
-  arrowLeft: '<path d="m15 18-6-6 6-6"/>', arrowRight: '<path d="m9 18 6-6-6-6"/>',
-  close: '<path d="M6 6l12 12M18 6 6 18"/>', palette: '<path d="M12 3a9 9 0 1 0 0 18h1.5a1.5 1.5 0 0 0 0-3H12a1.5 1.5 0 0 1 0-3h2a7 7 0 0 0 7-7c0-2.76-4.03-5-9-5Z"/><circle cx="7.5" cy="10" r=".8" fill="currentColor"/><circle cx="10" cy="6.7" r=".8" fill="currentColor"/><circle cx="14.2" cy="6.4" r=".8" fill="currentColor"/>',
+const paths = {
+  feed: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5Z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 8.94 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88L4.2 7l2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15.06 4.6a1.7 1.7 0 0 0 1.88-.34L17 4.2 19.83 7l-.06.06A1.7 1.7 0 0 0 19.4 9c.15.6.7 1 1.52 1H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"/>',
+  left: '<path d="m15 18-6-6 6-6"/>', right: '<path d="m9 18 6-6-6-6"/>',
   external: '<path d="M14 5h5v5M19 5l-9 9"/><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
-}[name]);
-const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${icon(name)}</svg>`;
+};
+const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const renderMarkdown = (markdown) => window.marked
+  ? window.marked.parse(markdown)
+  : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 
 class ArchiveApp {
-  constructor(deps) { Object.assign(this, deps); this.requestId = 0; }
+  constructor(deps) { Object.assign(this, deps); this.activeView = 'feed'; }
 
   mount() {
     this.root.innerHTML = this.shell();
-    this.els = Object.fromEntries(['yearNav','monthNav','calendar','calendarTitle','monthMeta','themeMenu','themeButton','reader','readerBody','readerKind','prevEntry','nextEntry'].map((id) => [id, document.getElementById(id)]));
-    this.bind(); this.render();
-    this.repository.findReferenceIds(this.archive.ids).then((ids) => this.store.setReferences(ids));
+    this.els = Object.fromEntries(['feedView','feedList','calendarView','profileView','settingsView','yearNav','monthNav','calendar','calendarTitle','monthMeta'].map((id) => [id, document.getElementById(id)]));
+    this.bind(); this.renderCalendar(); this.renderYears(); this.renderMonths(); this.renderFeed();
+    this.repository.findReferenceIds(this.archive.ids).then((ids) => { this.store.setReferences(ids); this.renderCalendar(); });
   }
+
+  navItems() { return [
+    ['feed', '일기', 'feed'], ['calendar', '달력', 'calendar'], ['profile', '프로필', 'user'], ['settings', '설정', 'settings']
+  ].map(([view, label, icon]) => `<button type="button" data-view="${view}" aria-label="${label}">${svg(icon)}<span>${label}</span></button>`).join(''); }
 
   shell() { return `
-    <div class="site">
-      <header class="global-header">
-        <a class="identity" href="./"><span class="identity-mark" aria-hidden="true">R</span><span>REXONDEX</span><small>ARCHIVE</small></a>
-        <nav aria-label="외부 링크"><a href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub</a></nav>
-        <button class="theme-trigger" id="themeButton" type="button" aria-haspopup="true" aria-expanded="false">${svg('palette')}<span>화면 설정</span></button>
-        <div class="theme-menu" id="themeMenu" hidden>${THEMES.map((t) => `<button type="button" data-theme-id="${t.id}"><i></i><span>${t.name}<small>${t.description}</small></span><b>✓</b></button>`).join('')}</div>
-      </header>
-      <div class="archive-layout">
-        <aside class="filter-panel" aria-label="아카이브 필터">
-          <section class="dataset-summary" aria-labelledby="datasetTitle"><p class="panel-label" id="datasetTitle">데이터셋</p><dl><div><dt>전체 기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최종 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl></section>
-          <section class="filter-section"><p class="panel-label">연도</p><nav id="yearNav" class="year-nav" aria-label="연도 선택"></nav></section>
-          <div class="panel-note"><span class="status-dot"></span><span>데이터 인덱스 정상</span></div>
-        </aside>
-        <main class="workspace">
-          <header class="content-header"><div><p class="breadcrumb">ARCHIVE / CALENDAR</p><h1>기록 인덱스</h1></div><div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('arrowLeft')}</button><button data-move="1" aria-label="다음 달">${svg('arrowRight')}</button></div></header>
-          <section class="archive-board" aria-labelledby="calendarTitle">
-            <header class="board-header"><div><h2 id="calendarTitle"></h2><small id="monthMeta"></small></div></header>
-            <nav class="month-nav" id="monthNav" aria-label="월 선택"></nav>
-            <div class="weekday-row" aria-hidden="true"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
-            <div class="calendar-grid" id="calendar" role="grid"></div>
-            <footer class="board-legend"><span><i class="legend written"></i>기록 있음</span><span><i class="legend reference"></i>참고 링크 포함</span></footer>
-          </section>
-        </main>
-      </div>
-      <footer class="site-footer"><span>REXONDEX ARCHIVE</span><span>DATA FORMAT: YYMMDD</span><span>${this.archive.ids.length} RECORDS</span></footer>
-    </div>
-    <dialog class="reader" id="reader">
-      <div class="reader-frame">
-        <header><span id="readerKind">기록</span><div><button id="prevEntry" aria-label="이전 기록">${svg('arrowLeft')}</button><button id="nextEntry" aria-label="다음 기록">${svg('arrowRight')}</button><button data-close aria-label="닫기">${svg('close')}</button></div></header>
-        <div class="reader-body" id="readerBody"></div>
-      </div>
-    </dialog>`; }
+    <div class="social-shell">
+      <header class="mobile-header"><a href="./">rexondex</a><span>일기</span></header>
+      <aside class="side-nav"><a class="wordmark" href="./">rexondex<small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
+      <main class="main-column">
+        <section class="view feed-view" id="feedView" aria-labelledby="feedTitle"><header class="view-header"><h1 id="feedTitle">일기</h1><p>최근 기록부터 표시됩니다.</p></header><div id="feedList"></div></section>
+        <section class="view calendar-view" id="calendarView" aria-labelledby="calendarPageTitle" hidden>
+          <header class="view-header"><h1 id="calendarPageTitle">달력</h1><p>날짜별 기록을 찾아봅니다.</p></header>
+          <div class="calendar-tools"><nav id="yearNav" class="year-nav" aria-label="연도 선택"></nav><div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('left')}</button><button data-move="1" aria-label="다음 달">${svg('right')}</button></div></div>
+          <div class="calendar-card"><header><h2 id="calendarTitle"></h2><span id="monthMeta"></span></header><nav class="month-nav" id="monthNav" aria-label="월 선택"></nav><div class="weekday-row" aria-hidden="true"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div><div class="calendar-grid" id="calendar" role="grid"></div></div>
+        </section>
+        <section class="view profile-view" id="profileView" aria-labelledby="profileTitle" hidden><div class="profile-card"><div class="avatar">R</div><div><h1 id="profileTitle">rexondex</h1><p>@rexondex</p></div></div><dl><div><dt>작성한 날</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최근 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><a class="profile-link" href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub ${svg('external')}</a></section>
+        <section class="view settings-view" id="settingsView" aria-labelledby="settingsTitle" hidden><header class="view-header"><h1 id="settingsTitle">설정</h1><p>화면 표시 방식을 선택합니다.</p></header><div class="setting-group"><h2>화면 모드</h2>${THEMES.map((theme) => `<button type="button" data-theme-id="${theme.id}"><span>${theme.name}<small>${theme.description}</small></span><b>✓</b></button>`).join('')}</div></section>
+      </main>
+      <aside class="right-panel"><div class="mini-profile"><div class="avatar">R</div><div><strong>rexondex</strong><span>@rexondex</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><a href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub에서 보기</a></aside>
+      <nav class="bottom-nav" aria-label="주요 메뉴">${this.navItems()}</nav>
+    </div>`; }
 
   bind() {
-    this.store.addEventListener('change', () => this.render());
-    document.querySelectorAll('[data-move]').forEach((el) => el.addEventListener('click', () => this.store.moveMonth(Number(el.dataset.move))));
-    this.els.themeButton.addEventListener('click', () => { const open = this.els.themeMenu.hidden; this.els.themeMenu.hidden = !open; this.els.themeButton.setAttribute('aria-expanded', open); });
-    this.els.themeMenu.addEventListener('click', (e) => { const button = e.target.closest('[data-theme-id]'); if (button) { this.themes.apply(button.dataset.themeId); this.els.themeMenu.hidden = true; this.renderThemes(); } });
-    document.addEventListener('click', (e) => { if (!e.target.closest('.theme-trigger, .theme-menu')) this.els.themeMenu.hidden = true; });
-    this.els.reader.querySelector('[data-close]').addEventListener('click', () => this.closeReader());
-    this.els.reader.addEventListener('cancel', (e) => { e.preventDefault(); this.closeReader(); });
-    this.els.reader.addEventListener('click', (e) => { if (e.target === this.els.reader) this.closeReader(); });
-    this.els.prevEntry.addEventListener('click', () => this.openAdjacent(-1));
-    this.els.nextEntry.addEventListener('click', () => this.openAdjacent(1));
-    window.addEventListener('keydown', (e) => { if (this.els.reader.open && e.key === 'ArrowLeft') this.openAdjacent(-1); if (this.els.reader.open && e.key === 'ArrowRight') this.openAdjacent(1); });
+    document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => this.showView(button.dataset.view)));
+    document.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', () => this.store.moveMonth(Number(button.dataset.move))));
+    document.querySelectorAll('[data-theme-id]').forEach((button) => button.addEventListener('click', () => { this.themes.apply(button.dataset.themeId); this.renderThemeState(); }));
+    this.store.addEventListener('change', () => { this.renderYears(); this.renderMonths(); this.renderCalendar(); });
+    this.els.calendar.addEventListener('click', (event) => { const button = event.target.closest('[data-entry]'); if (button) this.scrollToEntry(button.dataset.entry); });
+    this.renderNavState(); this.renderThemeState();
   }
 
-  render() { this.renderYears(); this.renderMonths(); this.renderCalendar(); this.renderThemes(); }
-  renderYears() {
-    const years = this.archive.years.includes(this.store.state.year) ? this.archive.years : [...this.archive.years, this.store.state.year].sort((a,b) => b-a);
-    this.els.yearNav.innerHTML = years.map((year) => `<button class="${year === this.store.state.year ? 'active' : ''}" data-year="${year}"><span>${year}</span><small>${String(this.archive.count(year)).padStart(2,'0')}</small></button>`).join('');
-    this.els.yearNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(Number(button.dataset.year), this.store.state.month)));
+  showView(view) {
+    this.activeView = view;
+    ['feed','calendar','profile','settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
+    this.renderNavState(); window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  renderMonths() {
-    this.els.monthNav.innerHTML = Array.from({length: 12}, (_, month) => `<button class="${month === this.store.state.month ? 'active' : ''}" data-month="${month}"><span>${String(month + 1).padStart(2,'0')}</span><small>${this.archive.count(this.store.state.year, month) || '—'}</small></button>`).join('');
-    this.els.monthNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(this.store.state.year, Number(button.dataset.month))));
+  renderNavState() { document.querySelectorAll('[data-view]').forEach((button) => { const active = button.dataset.view === this.activeView; button.classList.toggle('active', active); button.setAttribute('aria-current', active ? 'page' : 'false'); }); }
+  renderThemeState() { document.querySelectorAll('[data-theme-id]').forEach((button) => button.classList.toggle('active', button.dataset.themeId === this.themes.current)); }
+
+  async renderFeed() {
+    this.els.feedList.innerHTML = '<div class="feed-loading">기록을 정리하는 중...</div>';
+    const posts = await Promise.all([...this.archive.ids].reverse().map(async (id) => {
+      const entry = await this.repository.get(id), date = parseDiaryId(id);
+      return `<article class="diary-post" id="entry-${id}"><header><div class="post-avatar">R</div><div><strong>rexondex</strong><time datetime="20${id.slice(0,2)}-${id.slice(2,4)}-${id.slice(4,6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
+    }));
+    this.els.feedList.innerHTML = posts.join('');
   }
+
+  scrollToEntry(id) { this.showView('feed'); requestAnimationFrame(() => document.getElementById(`entry-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
+  renderYears() { this.els.yearNav.innerHTML = this.archive.years.map((year) => `<button class="${year === this.store.state.year ? 'active' : ''}" data-year="${year}">${year}<small>${this.archive.count(year)}</small></button>`).join(''); this.els.yearNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(Number(button.dataset.year), this.store.state.month))); }
+  renderMonths() { this.els.monthNav.innerHTML = Array.from({ length: 12 }, (_, month) => `<button class="${month === this.store.state.month ? 'active' : ''}" data-month="${month}">${month + 1}월</button>`).join(''); this.els.monthNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(this.store.state.year, Number(button.dataset.month)))); }
   renderCalendar() {
-    const { year, month, referenceIds } = this.store.state;
-    const count = this.archive.count(year, month); const first = new Date(year, month, 1);
-    const gridStart = new Date(year, month, 1 - ((first.getDay() + 6) % 7));
-    this.els.calendarTitle.textContent = `${year} / ${String(month + 1).padStart(2,'0')}`;
-    this.els.monthMeta.textContent = `이 달의 기록 ${count}건`;
-    this.els.calendar.setAttribute('aria-label', `${year}년 ${month + 1}월`);
-    this.els.calendar.innerHTML = Array.from({length: 42}, (_, i) => {
-      const date = new Date(gridStart); date.setDate(gridStart.getDate() + i);
-      const id = dateToDiaryId(date), has = this.archive.idSet.has(id), outside = date.getMonth() !== month;
-      const reference = referenceIds.has(id), today = new Date().toDateString() === date.toDateString();
-      return `<div class="day ${outside ? 'outside' : ''} ${today ? 'today' : ''}" role="gridcell">${has
-        ? `<button data-entry="${id}" class="has-entry ${reference ? 'has-reference' : ''}" aria-label="${escapeHtml(formatDate(date))} 기록 열기"><span>${String(date.getDate()).padStart(2,'0')}</span><i></i><small>${reference ? '참고 링크' : '기록'}</small></button>`
-        : `<span class="empty-day">${String(date.getDate()).padStart(2,'0')}</span>`}</div>`;
-    }).join('');
-    this.els.calendar.querySelectorAll('[data-entry]').forEach((button) => button.addEventListener('click', () => this.openReader(button.dataset.entry)));
+    const { year, month, referenceIds } = this.store.state, first = new Date(year, month, 1), start = new Date(year, month, 1 - ((first.getDay() + 6) % 7));
+    this.els.calendarTitle.textContent = `${year}년 ${month + 1}월`; this.els.monthMeta.textContent = `${this.archive.count(year, month)}개의 기록`;
+    this.els.calendar.innerHTML = Array.from({ length: 42 }, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); const id = dateToDiaryId(date), has = this.archive.idSet.has(id); return `<div class="day ${date.getMonth() !== month ? 'outside' : ''}">${has ? `<button data-entry="${id}" class="has-entry ${referenceIds.has(id) ? 'has-reference' : ''}" aria-label="${escapeHtml(formatDate(date))} 기록으로 이동"><span>${date.getDate()}</span></button>` : `<span>${date.getDate()}</span>`}</div>`; }).join('');
   }
-  renderThemes() { this.els.themeMenu.querySelectorAll('[data-theme-id]').forEach((b) => b.classList.toggle('active', b.dataset.themeId === this.themes.current)); }
-
-  async openReader(id) {
-    this.store.open(id); this.els.readerBody.innerHTML = '<div class="reader-loading"><i></i>기록을 불러오는 중</div>';
-    if (!this.els.reader.open) { this.els.reader.showModal(); document.body.classList.add('dialog-open'); }
-    const token = ++this.requestId, date = parseDiaryId(id); this.updateReaderNav();
-    try {
-      const entry = await this.repository.get(id); if (token !== this.requestId) return;
-      const rendered = window.marked ? window.marked.parse(entry.markdown) : `<p>${escapeHtml(entry.markdown).replace(/\n/g,'<br>')}</p>`;
-      this.els.readerKind.textContent = entry.reference ? '참고 링크가 있는 기록' : '기록';
-      this.els.readerBody.innerHTML = `<article><header class="entry-heading"><p>RECORD / ${id}</p><h2>${date.getDate()}일의 기록</h2><time>${escapeHtml(formatDate(date))}</time>${entry.reference ? `<a class="reference-card" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>참고 링크</span><strong>${escapeHtml(entry.reference.label)}</strong>${svg('external')}</a>` : ''}</header><div class="entry-content">${rendered}</div></article>`;
-      this.els.readerBody.scrollTop = 0;
-    } catch { if (token === this.requestId) this.els.readerBody.innerHTML = `<div class="reader-error">기록을 찾지 못했습니다.<small>database.js 데이터 인덱스를 갱신해주세요.</small></div>`; }
-  }
-  updateReaderNav() { const i = this.archive.ids.indexOf(this.store.state.activeId); this.els.prevEntry.disabled = i <= 0; this.els.nextEntry.disabled = i < 0 || i === this.archive.ids.length - 1; }
-  openAdjacent(offset) { const id = this.store.adjacent(offset); if (id) this.openReader(id); }
-  closeReader() { this.requestId++; this.els.reader.close(); document.body.classList.remove('dialog-open'); this.store.close(); }
 }
 
 
