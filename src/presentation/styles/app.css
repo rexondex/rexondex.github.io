@@ -29,3 +29,37 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }.social-shell { display: block; }.side-nav { display: none; }.main-column { min-height: calc(100vh - 112px); border: 0; }.mobile-header { position: sticky; z-index: 20; top: 0; display: flex; height: 52px; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter: blur(10px); }.mobile-header a { font-size: 19px; font-weight: 700; letter-spacing: -.04em; text-decoration: none; }.mobile-header span { color: var(--muted); font-size: 12px; }.view-header { top: 52px; padding-inline: 16px; }.diary-post { padding: 18px 16px; }.post-content, .post-reference, .diary-post>footer { margin-left: 0; }.post-content { font-size: 16px; line-height: 1.78; }.post-reference { margin-top: 0; }.bottom-nav { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); height: calc(64px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(12px); }.bottom-nav button { flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 3px; border-radius: 0; color: var(--muted); font-size: 10px; }.bottom-nav button svg { width: 22px; height: 22px; }.bottom-nav button.active { color: var(--text); font-weight: 700; }.calendar-tools { padding-inline: 12px; }.calendar-card { margin-inline: 12px; }.day { min-height: 58px; }.profile-card { padding-inline: 20px; }.profile-view dl, .profile-section-title, .social-links { margin-inline: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* Shared layout rhythm and interaction states */
+.side-nav nav button.active { background: var(--surface-2); }
+.main-column { box-shadow: 0 0 0 1px color-mix(in srgb, var(--border) 35%, transparent); }
+.view-header { min-height: 68px; display: flex; flex-direction: column; justify-content: center; }
+.diary-post { padding: 22px 24px 24px; transition: background-color .15s ease; }
+.diary-post:hover { background: color-mix(in srgb, var(--text) 1.5%, var(--surface)); }
+.diary-post>header { margin-bottom: 18px; }
+.post-avatar, .avatar { width: 44px; height: 44px; }
+.post-content, .post-reference, .diary-post>footer { margin-left: 0; }
+.post-content { max-width: 590px; font-size: 16px; line-height: 1.78; }
+.post-reference { min-height: 48px; margin-bottom: 18px; }
+.diary-post>footer { margin-top: 20px; }
+.right-panel { padding-top: 24px; }
+.right-card { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.right-card dl { margin-block: 18px 10px; }
+.social-links.compact a { min-height: 44px; }
+.profile-card { padding-top: 32px; }
+.profile-card h2 { margin: 0; font-size: 24px; }
+.profile-view dl, .social-links, .setting-group { border-color: var(--border); border-radius: 12px; }
+.social-links a, .setting-group button { min-height: 58px; }
+.calendar-tools { min-height: 74px; align-items: center; }
+.year-nav button, .month-stepper button { min-height: 44px; }
+.calendar-card { border-radius: 12px; }
+
+@media (max-width: 620px) {
+  .main-column { box-shadow: none; }
+  .view-header { position: static; min-height: 64px; padding: 13px 16px; }
+  .diary-post { padding: 20px 16px 22px; }
+  .diary-post:hover { background: var(--surface); }
+  .post-avatar, .avatar { width: 42px; height: 42px; }
+  .calendar-tools { min-height: 68px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
