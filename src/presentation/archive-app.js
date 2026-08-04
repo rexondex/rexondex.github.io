@@ -20,40 +20,35 @@ export class ArchiveApp {
   }
 
   shell() { return `
-    <div class="app-shell">
-      <aside class="rail">
-        <a class="identity" href="./"><span class="identity-mark">R</span><span>REXONDEX<small>PERSONAL ARCHIVE</small></span></a>
-        <div class="rail-section"><span class="rail-label">Index / Year</span><nav id="yearNav" class="year-nav"></nav></div>
-        <div class="archive-tally"><strong>${String(this.archive.ids.length).padStart(2, '0')}</strong><span>entries<br>preserved</span></div>
-        <div class="rail-footer"><span>EST. 2026</span><a href="https://github.com/rexondex" target="_blank" rel="noopener">GITHUB ↗</a></div>
-      </aside>
-      <main class="workspace">
-        <header class="topbar">
-          <div><span class="status-dot"></span> ARCHIVE ONLINE</div>
-          <button class="theme-trigger" id="themeButton" type="button" aria-haspopup="true" aria-expanded="false">${svg('palette')}<span>THEME</span></button>
-          <div class="theme-menu" id="themeMenu" hidden>${THEMES.map((t) => `<button type="button" data-theme-id="${t.id}"><i></i><span>${t.name}<small>${t.description}</small></span><b>✓</b></button>`).join('')}</div>
-        </header>
-        <section class="hero">
-          <p class="kicker">PRIVATE DIGITAL COLLECTION · VOL. 01</p>
-          <h1>기억을 위한<br><em>개인 기록 보관소</em></h1>
-          <p class="hero-copy">흘러가는 생각과 하루의 단서를 날짜 위에 축적합니다. 오래 남겨두고, 언제든 다시 찾아보기 위한 작은 아카이브입니다.</p>
-        </section>
-        <section class="archive-board">
-          <header class="board-header">
-            <div><span class="section-number">01</span><p>CALENDAR INDEX</p><h2 id="calendarTitle"></h2><small id="monthMeta"></small></div>
-            <div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('arrowLeft')}</button><span>MONTH</span><button data-move="1" aria-label="다음 달">${svg('arrowRight')}</button></div>
-          </header>
-          <nav class="month-nav" id="monthNav" aria-label="월 선택"></nav>
-          <div class="weekday-row"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
-          <div class="calendar-grid" id="calendar" role="grid"></div>
-          <footer class="board-legend"><span><i class="legend written"></i>WRITTEN</span><span><i class="legend reference"></i>WITH REFERENCE</span><p>날짜를 선택해 기록 열기</p></footer>
-        </section>
-        <footer class="site-footer"><span>REXONDEX ARCHIVE © 2026</span><span>KEEPING SMALL THINGS, FOR A LONG TIME.</span></footer>
-      </main>
+    <div class="site">
+      <header class="global-header">
+        <a class="identity" href="./"><span class="identity-mark" aria-hidden="true">R</span><span>REXONDEX</span><small>ARCHIVE</small></a>
+        <nav aria-label="외부 링크"><a href="https://github.com/rexondex" target="_blank" rel="noopener">GitHub</a></nav>
+        <button class="theme-trigger" id="themeButton" type="button" aria-haspopup="true" aria-expanded="false">${svg('palette')}<span>화면 설정</span></button>
+        <div class="theme-menu" id="themeMenu" hidden>${THEMES.map((t) => `<button type="button" data-theme-id="${t.id}"><i></i><span>${t.name}<small>${t.description}</small></span><b>✓</b></button>`).join('')}</div>
+      </header>
+      <div class="archive-layout">
+        <aside class="filter-panel" aria-label="아카이브 필터">
+          <section class="dataset-summary" aria-labelledby="datasetTitle"><p class="panel-label" id="datasetTitle">데이터셋</p><dl><div><dt>전체 기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최종 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl></section>
+          <section class="filter-section"><p class="panel-label">연도</p><nav id="yearNav" class="year-nav" aria-label="연도 선택"></nav></section>
+          <div class="panel-note"><span class="status-dot"></span><span>데이터 인덱스 정상</span></div>
+        </aside>
+        <main class="workspace">
+          <header class="content-header"><div><p class="breadcrumb">ARCHIVE / CALENDAR</p><h1>기록 인덱스</h1></div><div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('arrowLeft')}</button><button data-move="1" aria-label="다음 달">${svg('arrowRight')}</button></div></header>
+          <section class="archive-board" aria-labelledby="calendarTitle">
+            <header class="board-header"><div><h2 id="calendarTitle"></h2><small id="monthMeta"></small></div></header>
+            <nav class="month-nav" id="monthNav" aria-label="월 선택"></nav>
+            <div class="weekday-row" aria-hidden="true"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
+            <div class="calendar-grid" id="calendar" role="grid"></div>
+            <footer class="board-legend"><span><i class="legend written"></i>기록 있음</span><span><i class="legend reference"></i>참고 링크 포함</span></footer>
+          </section>
+        </main>
+      </div>
+      <footer class="site-footer"><span>REXONDEX ARCHIVE</span><span>DATA FORMAT: YYMMDD</span><span>${this.archive.ids.length} RECORDS</span></footer>
     </div>
     <dialog class="reader" id="reader">
       <div class="reader-frame">
-        <header><span id="readerKind">ARCHIVE ENTRY</span><div><button id="prevEntry" aria-label="이전 기록">${svg('arrowLeft')}</button><button id="nextEntry" aria-label="다음 기록">${svg('arrowRight')}</button><button data-close aria-label="닫기">${svg('close')}</button></div></header>
+        <header><span id="readerKind">기록</span><div><button id="prevEntry" aria-label="이전 기록">${svg('arrowLeft')}</button><button id="nextEntry" aria-label="다음 기록">${svg('arrowRight')}</button><button data-close aria-label="닫기">${svg('close')}</button></div></header>
         <div class="reader-body" id="readerBody"></div>
       </div>
     </dialog>`; }
@@ -87,14 +82,14 @@ export class ArchiveApp {
     const count = this.archive.count(year, month); const first = new Date(year, month, 1);
     const gridStart = new Date(year, month, 1 - ((first.getDay() + 6) % 7));
     this.els.calendarTitle.textContent = `${year} / ${String(month + 1).padStart(2,'0')}`;
-    this.els.monthMeta.textContent = `${String(count).padStart(2,'0')} ENTRIES IN THIS MONTH`;
+    this.els.monthMeta.textContent = `이 달의 기록 ${count}건`;
     this.els.calendar.setAttribute('aria-label', `${year}년 ${month + 1}월`);
     this.els.calendar.innerHTML = Array.from({length: 42}, (_, i) => {
       const date = new Date(gridStart); date.setDate(gridStart.getDate() + i);
       const id = dateToDiaryId(date), has = this.archive.idSet.has(id), outside = date.getMonth() !== month;
       const reference = referenceIds.has(id), today = new Date().toDateString() === date.toDateString();
       return `<div class="day ${outside ? 'outside' : ''} ${today ? 'today' : ''}" role="gridcell">${has
-        ? `<button data-entry="${id}" class="has-entry ${reference ? 'has-reference' : ''}" aria-label="${escapeHtml(formatDate(date))} 기록 열기"><span>${String(date.getDate()).padStart(2,'0')}</span><i></i><small>${reference ? 'REF.' : 'NOTE'}</small></button>`
+        ? `<button data-entry="${id}" class="has-entry ${reference ? 'has-reference' : ''}" aria-label="${escapeHtml(formatDate(date))} 기록 열기"><span>${String(date.getDate()).padStart(2,'0')}</span><i></i><small>${reference ? '참고 링크' : '기록'}</small></button>`
         : `<span class="empty-day">${String(date.getDate()).padStart(2,'0')}</span>`}</div>`;
     }).join('');
     this.els.calendar.querySelectorAll('[data-entry]').forEach((button) => button.addEventListener('click', () => this.openReader(button.dataset.entry)));
@@ -108,8 +103,8 @@ export class ArchiveApp {
     try {
       const entry = await this.repository.get(id); if (token !== this.requestId) return;
       const rendered = window.marked ? window.marked.parse(entry.markdown) : `<p>${escapeHtml(entry.markdown).replace(/\n/g,'<br>')}</p>`;
-      this.els.readerKind.textContent = entry.reference ? 'REFERENCE ENTRY' : 'ARCHIVE ENTRY';
-      this.els.readerBody.innerHTML = `<article><header class="entry-heading"><p>ENTRY / ${id}</p><h2>${date.getDate()}일의 기록</h2><time>${escapeHtml(formatDate(date))}</time>${entry.reference ? `<a class="reference-card" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>REFERENCE</span><strong>${escapeHtml(entry.reference.label)}</strong>${svg('external')}</a>` : ''}</header><div class="entry-content">${rendered}</div></article>`;
+      this.els.readerKind.textContent = entry.reference ? '참고 링크가 있는 기록' : '기록';
+      this.els.readerBody.innerHTML = `<article><header class="entry-heading"><p>RECORD / ${id}</p><h2>${date.getDate()}일의 기록</h2><time>${escapeHtml(formatDate(date))}</time>${entry.reference ? `<a class="reference-card" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>참고 링크</span><strong>${escapeHtml(entry.reference.label)}</strong>${svg('external')}</a>` : ''}</header><div class="entry-content">${rendered}</div></article>`;
       this.els.readerBody.scrollTop = 0;
     } catch { if (token === this.requestId) this.els.readerBody.innerHTML = `<div class="reader-error">기록을 불러오지 못했습니다.<small>daily/${escapeHtml(id)} 또는 daily/${escapeHtml(id)}.md 파일을 확인해주세요.</small></div>`; }
   }

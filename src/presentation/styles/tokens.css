@@ -1,27 +1,23 @@
-:root,
-:root[data-theme="paper"] {
+:root, :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f0eee8; --panel: #f8f6f0; --ink: #191b19; --muted: #73736d;
-  --faint: #a6a49b; --line: #cfccc2; --line-soft: #dedbd2; --accent: #d94f32;
-  --accent-ink: #fff7f2; --entry: #252925; --entry-ink: #faf9f4;
-  --wash: rgba(39, 43, 39, .035); --overlay: rgba(15, 17, 15, .55);
-  --shadow: 0 30px 90px rgba(28, 27, 23, .18); --radius: 2px;
-  --font-display: "Noto Serif KR", serif; --font-ui: "Manrope", sans-serif; --font-mono: "DM Mono", monospace;
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --text: #17191c;
+  --muted: #626872; --subtle: #8b929d; --border: #d9dde3; --border-strong: #b9c0c9;
+  --accent: #1457d9; --accent-hover: #0d46b5; --accent-soft: #e8efff; --on-accent: #ffffff;
+  --record: #1d2430; --reference: #d3451d; --focus: #005fcc; --overlay: rgba(13, 18, 28, .58);
+  --shadow: 0 18px 50px rgba(26, 34, 48, .14);
 }
-
-:root[data-theme="midnight"] {
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111317; --panel: #171a1f; --ink: #e9e8e3; --muted: #999b9d;
-  --faint: #696c70; --line: #363a40; --line-soft: #292d32; --accent: #e67759;
-  --accent-ink: #16100e; --entry: #d8d8d1; --entry-ink: #111317;
-  --wash: rgba(255,255,255,.025); --overlay: rgba(0,0,0,.76); --shadow: 0 35px 100px rgba(0,0,0,.55);
+  --bg: #111318; --surface: #181b21; --surface-2: #20242c; --text: #edf0f5;
+  --muted: #a5acb7; --subtle: #757d89; --border: #333842; --border-strong: #4a515e;
+  --accent: #78a7ff; --accent-hover: #9bbdff; --accent-soft: #1d3155; --on-accent: #08142b;
+  --record: #dce5f4; --reference: #ff8c69; --focus: #9ec0ff; --overlay: rgba(0, 0, 0, .72);
+  --shadow: 0 22px 60px rgba(0, 0, 0, .5);
 }
-
-:root[data-theme="terminal"] {
+:root[data-theme="contrast"] {
   color-scheme: dark;
-  --bg: #07120d; --panel: #0b1911; --ink: #b9e4c4; --muted: #6e9a79;
-  --faint: #476952; --line: #24442e; --line-soft: #173522; --accent: #d7ff67;
-  --accent-ink: #07120d; --entry: #9addaa; --entry-ink: #07120d;
-  --wash: rgba(127,255,159,.025); --overlay: rgba(0,8,3,.8); --shadow: 0 35px 100px rgba(0,0,0,.65);
-  --font-display: "DM Mono", monospace;
+  --bg: #000; --surface: #000; --surface-2: #111; --text: #fff; --muted: #fff; --subtle: #d8d8d8;
+  --border: #fff; --border-strong: #fff; --accent: #ffea00; --accent-hover: #fff36b;
+  --accent-soft: #252200; --on-accent: #000; --record: #fff; --reference: #00ffff;
+  --focus: #ffea00; --overlay: rgba(0,0,0,.85); --shadow: none;
 }

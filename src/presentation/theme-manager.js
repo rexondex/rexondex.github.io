@@ -1,21 +1,21 @@
 export const THEMES = [
-  { id: 'paper', name: 'Paper', description: '따뜻한 종이' },
-  { id: 'midnight', name: 'Midnight', description: '깊은 밤' },
-  { id: 'terminal', name: 'Terminal', description: '디지털 기록실' }
+  { id: 'light', name: 'Light', description: '밝은 화면' },
+  { id: 'dark', name: 'Dark', description: '어두운 화면' },
+  { id: 'contrast', name: 'High contrast', description: '고대비 화면' }
 ];
 
 export class ThemeManager extends EventTarget {
   constructor(storage = localStorage) {
     super(); this.storage = storage;
     this.current = THEMES.some((theme) => theme.id === document.documentElement.dataset.theme)
-      ? document.documentElement.dataset.theme : 'paper';
+      ? document.documentElement.dataset.theme : 'light';
     this.apply(this.current);
   }
   apply(id) {
     if (!THEMES.some((theme) => theme.id === id)) return;
     this.current = id; document.documentElement.dataset.theme = id;
     this.storage.setItem('archive-theme', id);
-    const colors = { paper: '#f0eee8', midnight: '#111317', terminal: '#07120d' };
+    const colors = { light: '#f6f7f9', dark: '#111318', contrast: '#000000' };
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
     this.dispatchEvent(new CustomEvent('change', { detail: id }));
   }
