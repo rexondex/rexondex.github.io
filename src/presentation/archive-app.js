@@ -16,7 +16,7 @@ const renderMarkdown = (markdown) => window.marked
   : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
 const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
-  <a href="https://rexondex.github.io" target="_blank" rel="noopener"><span>Website<small>rexondex.github.io</small></span>${svg('external')}</a>
+  <a href="https://rexondex.github.io" target="_blank" rel="noopener"><span>github.io<small>rexondex.github.io</small></span>${svg('external')}</a>
   <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>rexondex.tistory.com</small></span>${svg('external')}</a>
   <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>u/rexondex</small></span>${svg('external')}</a>
   <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>@rexon-dex</small></span>${svg('external')}</a>
@@ -28,16 +28,19 @@ export class ArchiveApp {
 
   mount() {
     this.root.innerHTML = this.shell();
-    this.els = Object.fromEntries(['feedView','feedList','calendarView','profileView','settingsView','yearNav','monthNav','calendar','calendarTitle','monthMeta'].map((id) => [id, document.getElementById(id)]));
+    this.els = Object.fromEntries(['feedView', 'feedList', 'calendarView', 'profileView', 'settingsView', 'yearNav', 'monthNav', 'calendar', 'calendarTitle', 'monthMeta'].map((id) => [id, document.getElementById(id)]));
     this.bind(); this.renderCalendar(); this.renderYears(); this.renderMonths(); this.renderFeed();
     this.repository.findReferenceIds(this.archive.ids).then((ids) => { this.store.setReferences(ids); this.renderCalendar(); });
   }
 
-  navItems() { return [
-    ['feed', '일기', 'feed'], ['calendar', '달력', 'calendar'], ['profile', '프로필', 'user'], ['settings', '설정', 'settings']
-  ].map(([view, label, icon]) => `<button type="button" data-view="${view}" aria-label="${label}">${svg(icon)}<span>${label}</span></button>`).join(''); }
+  navItems() {
+    return [
+      ['feed', '일기', 'feed'], ['calendar', '달력', 'calendar'], ['profile', '프로필', 'user'], ['settings', '설정', 'settings']
+    ].map(([view, label, icon]) => `<button type="button" data-view="${view}" aria-label="${label}">${svg(icon)}<span>${label}</span></button>`).join('');
+  }
 
-  shell() { return `
+  shell() {
+    return `
     <div class="social-shell">
       <header class="mobile-header"><a href="./">rexondex</a><span>일기</span></header>
       <aside class="side-nav"><a class="wordmark" href="./">rexondex<small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
@@ -53,7 +56,8 @@ export class ArchiveApp {
       </main>
       <aside class="right-panel"><div class="mini-profile">${profileImage}<div><strong>rexondex</strong><span>@rexondex</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl>${socialLinks(true)}</aside>
       <nav class="bottom-nav" aria-label="주요 메뉴">${this.navItems()}</nav>
-    </div>`; }
+    </div>`;
+  }
 
   bind() {
     document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => this.showView(button.dataset.view)));
@@ -66,7 +70,7 @@ export class ArchiveApp {
 
   showView(view) {
     this.activeView = view;
-    ['feed','calendar','profile','settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
+    ['feed', 'calendar', 'profile', 'settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
     this.renderNavState(); window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   renderNavState() { document.querySelectorAll('[data-view]').forEach((button) => { const active = button.dataset.view === this.activeView; button.classList.toggle('active', active); button.setAttribute('aria-current', active ? 'page' : 'false'); }); }
@@ -76,7 +80,7 @@ export class ArchiveApp {
     this.els.feedList.innerHTML = '<div class="feed-loading">기록을 정리하는 중...</div>';
     const posts = await Promise.all([...this.archive.ids].reverse().map(async (id) => {
       const entry = await this.repository.get(id), date = parseDiaryId(id);
-      return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0,2)}-${id.slice(2,4)}-${id.slice(4,6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
+      return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
     }));
     this.els.feedList.innerHTML = posts.join('');
   }
