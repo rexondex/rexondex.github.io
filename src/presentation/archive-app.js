@@ -111,7 +111,7 @@ export class ArchiveApp {
       this.els.readerKind.textContent = entry.reference ? 'REFERENCE ENTRY' : 'ARCHIVE ENTRY';
       this.els.readerBody.innerHTML = `<article><header class="entry-heading"><p>ENTRY / ${id}</p><h2>${date.getDate()}일의 기록</h2><time>${escapeHtml(formatDate(date))}</time>${entry.reference ? `<a class="reference-card" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>REFERENCE</span><strong>${escapeHtml(entry.reference.label)}</strong>${svg('external')}</a>` : ''}</header><div class="entry-content">${rendered}</div></article>`;
       this.els.readerBody.scrollTop = 0;
-    } catch { if (token === this.requestId) this.els.readerBody.innerHTML = `<div class="reader-error">기록을 불러오지 못했습니다.<small>daily/${escapeHtml(id)}.md 파일을 확인해주세요.</small></div>`; }
+    } catch { if (token === this.requestId) this.els.readerBody.innerHTML = `<div class="reader-error">기록을 불러오지 못했습니다.<small>daily/${escapeHtml(id)} 또는 daily/${escapeHtml(id)}.md 파일을 확인해주세요.</small></div>`; }
   }
   updateReaderNav() { const i = this.archive.ids.indexOf(this.store.state.activeId); this.els.prevEntry.disabled = i <= 0; this.els.nextEntry.disabled = i < 0 || i === this.archive.ids.length - 1; }
   openAdjacent(offset) { const id = this.store.adjacent(offset); if (id) this.openReader(id); }

@@ -6,8 +6,19 @@ export class HttpDiaryRepository {
 
   async get(id) {
     if (this.#cache.has(id)) return this.#cache.get(id);
-    const response = await fetch(`${this.basePath}/${id}.md`);
-    if (!response.ok) throw new Error(`Diary ${id}: HTTP ${response.status}`);
+    const candidates = [`${this.basePath}/${id}`, `${this.basePath}/${id}.md`];
+    let response = null;
+
+    for (const path of candidates) {
+      const candidate = await fetch(path);
+      if (candidate.ok) {
+        response = candidate;
+        break;
+      }
+      if (candidate.status !== 404) throw new Error(`Diary ${id}: HTTP ${candidate.status}`);
+    }
+
+    if (!response) throw new Error(`Diary ${id}: file not found`);
     const entry = { id, ...parseDiaryMarkdown(await response.text()) };
     this.#cache.set(id, entry);
     return entry;
