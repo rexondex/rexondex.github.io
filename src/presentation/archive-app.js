@@ -16,7 +16,7 @@ const renderMarkdown = (markdown) => window.marked
   : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
 const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
-  <a href="https://rexondex.github.io" target="_blank" rel="noopener"><span>github.io<small>rexondex.github.io</small></span>${svg('external')}</a>
+  <a href="https://github.com/rexondex" target="_blank" rel="noopener"><span>GitHub<small>github.com/rexondex</small></span>${svg('external')}</a>
   <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>rexondex.tistory.com</small></span>${svg('external')}</a>
   <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>u/rexondex</small></span>${svg('external')}</a>
   <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>@rexon-dex</small></span>${svg('external')}</a>

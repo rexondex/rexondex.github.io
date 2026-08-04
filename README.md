@@ -380,7 +380,7 @@ new ArchiveApp({
 
 | 서비스 | 주소 |
 |---|---|
-| Website | `https://rexondex.github.io` |
+| GitHub | `https://github.com/rexondex` |
 | Tistory | `https://rexondex.tistory.com` |
 | Reddit | `https://www.reddit.com/user/rexondex` |
 | YouTube | `https://www.youtube.com/@rexon-dex` |
