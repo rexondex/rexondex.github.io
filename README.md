@@ -10,8 +10,9 @@
 
 - 일기의 원본은 사람이 읽고 수정하기 쉬운 개별 텍스트 파일로 보관합니다.
 - 파일명 자체가 기록 날짜이며 별도의 서버 데이터베이스를 사용하지 않습니다.
-- 브라우저 실행 중에는 일기 파일을 `fetch`하지 않습니다.
-- 로컬에서 `index.html`을 직접 열어도 작동해야 합니다.
+- `database.js`에 등록한 날짜만 일기 목록으로 사용합니다.
+- 실제 본문은 `database/YYMMDD` 파일에서 읽습니다.
+- GitHub Pages 같은 정적 HTTP 서버에서 별도 백엔드 없이 작동합니다.
 - GitHub Pages에 별도 빌드 서버 없이 배포할 수 있어야 합니다.
 - 기본 화면은 최신 글부터 읽는 소셜 피드입니다.
 - 달력은 특정 날짜의 기록을 찾기 위한 보조 탐색 화면입니다.
@@ -31,7 +32,7 @@ rexondex.github.io/
 │  ├─ domain/
 │  │  └─ diary.js                    날짜·ID·본문 메타데이터 규칙
 │  ├─ infrastructure/
-│  │  └─ static-diary-repository.js  정적 기록 조회와 파싱 캐시
+│  │  └─ http-diary-repository.js    기록 파일 요청과 파싱 캐시
 │  ├─ application/
 │  │  └─ archive-store.js            달력 상태와 상태 변경 이벤트
 │  ├─ presentation/
@@ -46,7 +47,7 @@ rexondex.github.io/
 │  ├─ build-database.ps1             database/* → database.js
 │  └─ build-app.ps1                  src/* → app.js
 │
-├─ database.js                       생성된 브라우저용 기록 번들
+├─ database.js                       브라우저용 기록 파일명 목록
 ├─ app.js                            생성된 브라우저용 앱 번들
 ├─ index.html                        정적 진입 문서
 ├─ rexondex.jpg                      사용자 프로필 이미지
@@ -54,14 +55,16 @@ rexondex.github.io/
 └─ README.md                         프로젝트 설계 문서
 ```
 
-### 원본과 생성물
+### 원본, 목록과 생성물
 
-| 사람이 관리하는 원본 | 브라우저용 생성물 | 생성 명령 |
+| 구분 | 파일 | 관리 방법 |
 |---|---|---|
-| `database/YYMMDD` | `database.js` | `tools/build-database.ps1` |
-| `src/**/*.js` | `app.js` | `tools/build-app.ps1` |
+| 일기 원본 | `database/YYMMDD` | 직접 작성 |
+| 일기 목록 | `database.js` | 파일명을 직접 추가하거나 `tools/build-database.ps1`로 생성 |
+| 앱 원본 | `src/**/*.js` | 직접 수정 |
+| 앱 생성물 | `app.js` | `tools/build-app.ps1`로 생성 |
 
-일반적인 수정은 원본에서 해야 합니다. 생성물을 직접 수정하면 다음 빌드 때 덮어써집니다.
+`database.js`에는 본문이 아니라 파일명만 들어갑니다. `app.js`는 생성물이므로 직접 수정하지 않습니다.
 
 ## 3. 실행 아키텍처
 
@@ -72,12 +75,12 @@ index.html
   │
   ├─ 저장된 테마를 <html data-theme="...">에 선적용
   ├─ database.js 실행
-  │    └─ window.ARCHIVE_DATABASE 생성
+  │    └─ window.DIARY_FILES 생성
   ├─ marked CDN 로드 시도
   ├─ tokens.css + app.css 적용
   └─ app.js 실행
        ├─ createArchive(Object.keys(records))
-       ├─ StaticDiaryRepository 생성
+       ├─ HttpDiaryRepository 생성
        ├─ ArchiveStore 생성
        ├─ ThemeManager 생성
        └─ ArchiveApp.mount()
@@ -86,15 +89,15 @@ index.html
 런타임 기록 흐름은 다음과 같습니다.
 
 ```text
-window.ARCHIVE_DATABASE
+window.DIARY_FILES
         │
         ▼
 createArchive() ── 유효 날짜 선별, 정렬, 연도와 개수 계산
         │
         ├──────────────┐
         ▼              ▼
-ArchiveStore     StaticDiaryRepository
-달력 상태         본문 파싱·캐시
+ArchiveStore     HttpDiaryRepository
+달력 상태         database/YYMMDD 요청·파싱·캐시
         │              │
         └──────┬───────┘
                ▼
@@ -102,7 +105,7 @@ ArchiveStore     StaticDiaryRepository
  피드 / 달력 / 프로필 / 설정
 ```
 
-`app.js`는 ES 모듈을 순서대로 합친 일반 스크립트입니다. 따라서 `file://` 환경에서 ES 모듈 CORS 제한 없이 실행할 수 있습니다.
+`app.js`는 ES 모듈을 순서대로 합친 일반 스크립트입니다. 다만 본문 파일은 `fetch`로 읽으므로 `file://`로 직접 열 수 없고 HTTP 정적 서버가 필요합니다. GitHub Pages에서는 자동으로 HTTP 환경이 제공됩니다.
 
 ## 4. 데이터 설계
 
@@ -186,18 +189,18 @@ Markdown을 사용할 수도 있습니다.
 
 첫 줄이 유효한 링크가 아니면 전체 내용을 일반 본문으로 처리합니다.
 
-### 4.4 브라우저용 데이터 번들
+### 4.4 기록 파일명 목록
 
 `database.js`의 계약은 다음과 같습니다.
 
 ```js
-window.ARCHIVE_DATABASE = {
-  "260804": "2026년 8월 4일의 기록",
-  "260805": "첫 번째 줄\n두 번째 줄"
-};
+window.DIARY_FILES = [
+  '260804',
+  '260805'
+];
 ```
 
-키는 기록 ID이고 값은 파일의 전체 문자열입니다. 이 객체의 키가 일기 목록 역할도 하므로 별도의 날짜 목록 파일은 없습니다.
+각 항목은 `database` 폴더 안의 확장자 없는 파일명입니다. 브라우저는 목록의 각 ID를 `database/260804` 같은 주소로 요청합니다. 목록에 없는 파일은 화면에 표시되지 않으며, 목록에 있지만 실제 파일이 없으면 해당 기록을 읽을 수 없습니다.
 
 ## 5. 계층별 책임
 
@@ -226,14 +229,15 @@ window.ARCHIVE_DATABASE = {
 }
 ```
 
-### 5.2 Infrastructure: `static-diary-repository.js`
+### 5.2 Infrastructure: `http-diary-repository.js`
 
-정적 객체를 화면에서 사용할 기록 엔티티로 변환합니다.
+`database` 폴더의 텍스트 파일을 요청하고 화면에서 사용할 기록 엔티티로 변환합니다.
 
-`StaticDiaryRepository`의 책임:
+`HttpDiaryRepository`의 책임:
 
-- `window.ARCHIVE_DATABASE`의 얕은 복사본을 동결합니다.
-- ID로 원문을 찾습니다.
+- ID를 `database/YYMMDD` 경로로 변환합니다.
+- `fetch`로 확장자 없는 원문 파일을 읽습니다.
+- HTTP 오류를 기록 조회 오류로 처리합니다.
 - 도메인 파서를 통해 본문과 참고 링크를 분리합니다.
 - 이미 파싱한 결과를 `Map`에 캐시합니다.
 - 참고 링크가 포함된 ID 집합을 계산합니다.
@@ -248,7 +252,7 @@ await repository.findReferenceIds(ids);
 // Set<string>
 ```
 
-현재 구현은 메모리 정적 저장소이지만, UI는 저장 방식 자체를 알지 않습니다. 이후 검색 인덱스나 다른 저장소를 추가할 때 같은 인터페이스를 구현하면 됩니다.
+화면은 구체적인 HTTP 경로를 알지 않습니다. 이후 정적 번들, 검색 인덱스나 다른 저장소로 바꿀 때 같은 인터페이스를 구현하면 됩니다.
 
 ### 5.3 Application: `archive-store.js`
 
@@ -303,7 +307,7 @@ new ArchiveApp({
 ```text
 전역 정적 데이터
 → 도메인 아카이브
-→ 정적 저장소
+→ HTTP 기록 저장소
 → 상태 저장소
 → 테마 관리자
 → 화면 앱
@@ -467,9 +471,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-database.ps1
 3. 정확한 숫자 6자리 이름만 남깁니다.
 4. `yyyyMMdd`로 실제 날짜인지 검증합니다.
 5. 이름순으로 정렬합니다.
-6. 각 파일을 UTF-8 문자열로 읽습니다.
-7. 압축 JSON 객체로 변환합니다.
-8. `window.ARCHIVE_DATABASE = ...` 형식의 `database.js`를 생성합니다.
+6. 유효한 파일명 목록을 만듭니다.
+7. `window.DIARY_FILES = [...]` 형식의 `database.js`를 생성합니다.
 9. BOM 없는 UTF-8로 저장합니다.
 
 ### 9.2 앱 빌드
@@ -481,7 +484,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-app.ps1
 모듈 결합 순서:
 
 1. `src/domain/diary.js`
-2. `src/infrastructure/static-diary-repository.js`
+2. `src/infrastructure/http-diary-repository.js`
 3. `src/application/archive-store.js`
 4. `src/presentation/theme-manager.js`
 5. `src/presentation/archive-app.js`
@@ -509,7 +512,16 @@ database/260804
 ```
 
 2. UTF-8로 내용을 작성합니다.
-3. 데이터 번들을 갱신합니다.
+3. `database.js`의 목록에 파일명을 직접 추가합니다.
+
+```js
+window.DIARY_FILES = [
+  // 기존 기록...
+  '260804'
+];
+```
+
+목록을 자동으로 다시 만들고 싶다면 다음 명령을 대신 실행할 수 있습니다.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\build-database.ps1
@@ -521,8 +533,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-database.ps1
 ### 10.2 기존 일기 수정
 
 1. `database/YYMMDD` 원본을 수정합니다.
-2. `build-database.ps1`을 다시 실행합니다.
-3. 원본과 갱신된 `database.js`를 함께 커밋합니다.
+2. 날짜 파일명이 변하지 않았다면 `database.js`는 수정하지 않습니다.
+3. 원본 파일을 커밋합니다.
 
 ### 10.3 화면 또는 기능 수정
 
@@ -552,19 +564,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-app.ps1
 
 ## 11. 로컬 실행
 
-### 가장 간단한 방법
-
-`index.html`을 직접 엽니다.
-
-```text
-file:///.../rexondex.github.io/index.html
-```
-
-기록과 앱이 일반 JavaScript 파일에 정적으로 포함되어 있으므로 별도 서버가 필요하지 않습니다.
-
-### 정적 서버로 확인
-
-GitHub Pages와 유사한 HTTP 환경이 필요하면 선택적으로 정적 서버를 사용할 수 있습니다.
+본문 파일을 `fetch`하므로 `index.html`을 더블클릭하는 `file://` 방식은 지원하지 않습니다. 프로젝트 루트에서 정적 서버를 실행합니다.
 
 ```powershell
 python -m http.server 8000
@@ -594,7 +594,7 @@ https://rexondex.github.io
 
 배포 전에 반드시 확인할 생성물:
 
-- 일기를 수정했다면 `database.js`
+- 새 일기를 추가·삭제하거나 파일명을 바꿨다면 `database.js`
 - 앱 소스를 수정했다면 `app.js`
 - 프로필 이미지나 파비콘을 수정했다면 해당 에셋
 
@@ -606,8 +606,8 @@ https://rexondex.github.io
 - [ ] 실제 존재하는 날짜인가?
 - [ ] 확장자가 없는가?
 - [ ] UTF-8로 저장했는가?
-- [ ] `database.js`를 다시 생성했는가?
-- [ ] 생성된 기록 수가 원본 파일 수와 같은가?
+- [ ] 새 파일명을 `database.js` 목록에 추가했는가?
+- [ ] 목록 항목 수가 원본 파일 수와 같은가?
 
 ### 애플리케이션
 
@@ -657,7 +657,7 @@ get(id)                 // { id, markdown, reference }
 findReferenceIds(ids)   // Set<string>
 ```
 
-그다음 `main.js`에서 `StaticDiaryRepository` 대신 새 구현체를 주입합니다. 화면 계층은 변경하지 않아도 됩니다.
+그다음 `main.js`에서 `HttpDiaryRepository` 대신 새 구현체를 주입합니다. 화면 계층은 변경하지 않아도 됩니다.
 
 ### 검색 기능 추가
 
@@ -671,8 +671,9 @@ findReferenceIds(ids)   // Set<string>
 
 ## 15. 제약과 주의사항
 
-- `database.js`는 원본 데이터의 복사본이므로 원본 수정 후 반드시 다시 생성해야 합니다.
-- 기록 수가 매우 많아지면 모든 본문이 하나의 JavaScript 파일과 피드 DOM에 포함되어 초기 로딩 비용이 커집니다.
+- `database.js`는 파일명 목록이므로 새 파일을 추가하거나 이름을 바꿀 때 함께 수정해야 합니다.
+- GitHub Pages는 폴더 내용을 자동으로 나열하지 않으므로 `database.js` 목록을 완전히 제거할 수 없습니다.
+- 첫 화면에서 등록된 기록을 모두 요청하고 피드 DOM에 렌더링하므로 기록 수가 매우 많아지면 초기 로딩 비용이 커집니다.
 - 현재 피드는 모든 기록을 한 번에 렌더링합니다. 수백 또는 수천 건으로 늘어나면 페이지네이션이나 가상 스크롤을 고려해야 합니다.
 - `marked`는 CDN으로 불러옵니다. 오프라인에서는 기본 텍스트 렌더러가 대신 사용되므로 고급 Markdown 표현이 제한됩니다.
 - 일기 내용은 소유자가 관리하는 신뢰된 데이터라는 전제로 Markdown HTML을 표시합니다. 외부 사용자가 내용을 입력할 수 있게 확장한다면 HTML 정화 계층이 필요합니다.
@@ -684,9 +685,9 @@ findReferenceIds(ids)   // Set<string>
 
 ```text
 기록은 database에서 작성한다.
-데이터 변경 후 database.js를 만든다.
+새 기록을 추가하면 database.js에 파일명을 등록한다.
 기능은 src에서 수정한다.
 기능 변경 후 app.js를 만든다.
-브라우저는 생성물만 실행한다.
+브라우저는 database.js 목록을 보고 database 파일을 요청한다.
 계층은 안쪽 규칙에서 바깥 화면 방향으로 의존한다.
 ```

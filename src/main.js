@@ -1,12 +1,12 @@
 import { createArchive } from './domain/diary.js';
-import { StaticDiaryRepository } from './infrastructure/static-diary-repository.js';
+import { HttpDiaryRepository } from './infrastructure/http-diary-repository.js';
 import { ArchiveStore } from './application/archive-store.js';
 import { ThemeManager } from './presentation/theme-manager.js';
 import { ArchiveApp } from './presentation/archive-app.js';
 
-const records = window.ARCHIVE_DATABASE || {};
-const archive = createArchive(Object.keys(records));
-const repository = new StaticDiaryRepository(records);
+const diaryFiles = window.DIARY_FILES || [];
+const archive = createArchive(diaryFiles);
+const repository = new HttpDiaryRepository('./database');
 const store = new ArchiveStore(archive);
 const themes = new ThemeManager();
 

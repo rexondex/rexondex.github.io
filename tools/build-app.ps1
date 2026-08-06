@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourceFiles = @(
     'src/domain/diary.js',
-    'src/infrastructure/static-diary-repository.js',
+    'src/infrastructure/http-diary-repository.js',
     'src/application/archive-store.js',
     'src/presentation/theme-manager.js',
     'src/presentation/archive-app.js',

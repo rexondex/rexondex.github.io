@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourceDirectory = Join-Path $projectRoot 'database'
 $outputFile = Join-Path $projectRoot 'database.js'
-$records = [ordered]@{}
+$ids = @()
 
 Get-ChildItem -LiteralPath $sourceDirectory -File |
     Where-Object { $_.Name -match '^\d{6}$' } |
@@ -19,13 +19,13 @@ Get-ChildItem -LiteralPath $sourceDirectory -File |
         )
 
         if ($isValidDate) {
-            $records[$_.Name] = [IO.File]::ReadAllText($_.FullName, [Text.Encoding]::UTF8)
+            $ids += $_.Name
         }
     }
 
-$json = $records | ConvertTo-Json -Depth 3 -Compress
-$javascript = "window.ARCHIVE_DATABASE = $json;`n"
+$items = $ids | ForEach-Object { "  '$_'" }
+$javascript = "window.DIARY_FILES = [`n" + ($items -join ",`n") + "`n];`n"
 $utf8WithoutBom = New-Object Text.UTF8Encoding($false)
 [IO.File]::WriteAllText($outputFile, $javascript, $utf8WithoutBom)
 
-Write-Host "database.js generated: $($records.Count) records"
+Write-Host "database.js generated: $($ids.Count) file names"

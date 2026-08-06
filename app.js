@@ -57,25 +57,29 @@ const createArchive = (rawIds) => {
 };
 
 
-// Source: src/infrastructure/static-diary-repository.js
+// Source: src/infrastructure/http-diary-repository.js
 
-class StaticDiaryRepository {
+class HttpDiaryRepository {
   #cache = new Map();
 
-  constructor(records = {}) {
-    this.records = Object.freeze({ ...records });
+  constructor(basePath = './database') {
+    this.basePath = basePath;
   }
 
   async get(id) {
     if (this.#cache.has(id)) return this.#cache.get(id);
-    if (!Object.hasOwn(this.records, id)) throw new Error(`Diary ${id}: not found`);
-    const entry = { id, ...parseDiaryMarkdown(this.records[id]) };
+    const response = await fetch(`${this.basePath}/${id}`);
+    if (!response.ok) throw new Error(`Diary ${id}: HTTP ${response.status}`);
+    const entry = { id, ...parseDiaryMarkdown(await response.text()) };
     this.#cache.set(id, entry);
     return entry;
   }
 
   async findReferenceIds(ids) {
-    const references = await Promise.all(ids.map(async (id) => (await this.get(id)).reference ? id : null));
+    const references = await Promise.all(ids.map(async (id) => {
+      try { return (await this.get(id)).reference ? id : null; }
+      catch { return null; }
+    }));
     return new Set(references.filter(Boolean));
   }
 }
@@ -235,9 +239,9 @@ class ArchiveApp {
 
 // Source: src/main.js
 
-const records = window.ARCHIVE_DATABASE || {};
-const archive = createArchive(Object.keys(records));
-const repository = new StaticDiaryRepository(records);
+const diaryFiles = window.DIARY_FILES || [];
+const archive = createArchive(diaryFiles);
+const repository = new HttpDiaryRepository('./database');
 const store = new ArchiveStore(archive);
 const themes = new ThemeManager();
 
