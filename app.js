@@ -1,6 +1,5 @@
 (() => {
 'use strict';
-// Source: src/domain/diary.js
 const parseDiaryId = (id) => {
   if (!/^\d{6}$/.test(String(id))) return null;
   const year = 2000 + Number(id.slice(0, 2));
@@ -57,7 +56,6 @@ const createArchive = (rawIds) => {
 };
 
 
-// Source: src/infrastructure/http-diary-repository.js
 
 class HttpDiaryRepository {
   #cache = new Map();
@@ -85,7 +83,6 @@ class HttpDiaryRepository {
 }
 
 
-// Source: src/application/archive-store.js
 class ArchiveStore extends EventTarget {
   constructor(archive) {
     super();
@@ -115,7 +112,6 @@ class ArchiveStore extends EventTarget {
 }
 
 
-// Source: src/presentation/theme-manager.js
 const THEMES = [
   { id: 'light', name: '밝게', description: '흰색 배경' },
   { id: 'dark', name: '어둡게', description: '검은색 배경' }
@@ -139,7 +135,6 @@ class ThemeManager extends EventTarget {
 }
 
 
-// Source: src/presentation/archive-app.js
 
 const paths = {
   feed: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5Z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
@@ -237,7 +232,6 @@ class ArchiveApp {
 }
 
 
-// Source: src/main.js
 
 const diaryFiles = window.DIARY_FILES || [];
 const archive = createArchive(diaryFiles);
