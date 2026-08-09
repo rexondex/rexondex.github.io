@@ -1,11 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
-  <title id="title">rexondex polyhedron</title>
-  <desc id="desc">검은 바탕 위 흰 선으로 그린 입체적인 다면체</desc>
-  <rect width="64" height="64" rx="14" fill="#171717"/>
-  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M32 9 50 19l5 19-14 16-21-2L9 36l5-18Z" stroke-width="2.2"/>
-    <path d="m32 9-2 21 20-11M30 30 14 18M30 30 9 36M30 30l-10 22M30 30l11 24M30 30l25 8M50 19l-9 35M14 18 9 36M9 36l11 16" stroke-width="1.45"/>
-    <path d="m14 18 36 1 5 19-46-2 23-27 9 45-21-2Z" stroke-width=".8" opacity=".58"/>
-    <circle cx="30" cy="30" r="2.2" fill="#fff" stroke="none"/>
-  </g>
+  <title id="title">REXONDEX geometric monolith</title>
+  <desc id="desc">검은 바탕 위에 떠 있는 형이상학적 다면체 문양</desc>
+  <rect width="64" height="64" rx="14" fill="#0f1115"/>
+
+  <!-- 하나의 불가능한 다면체처럼 읽히는 세 개의 면 -->
+  <path d="M32 7 54 20 45 33 32 27 19 33 10 20Z" fill="#fff"/>
+  <path d="m10 20 9 13 13-6v30L13 46Z" fill="#d8dbe2"/>
+  <path d="m54 20-9 13-13-6v30l19-11Z" fill="#858b98"/>
+
+  <!-- 중심의 빈 공간은 눈, 문, 기록의 핵을 상징 -->
+  <path d="m32 27 13 6-13 8-13-8Z" fill="#0f1115"/>
+  <circle cx="32" cy="34" r="2.4" fill="#fff"/>
+
+  <!-- 축소했을 때에도 실루엣을 묶어 주는 외곽선 -->
+  <path d="M32 7 54 20l-3 26-19 11-19-11-3-26Z" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
 </svg>
