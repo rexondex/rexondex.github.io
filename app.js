@@ -139,6 +139,7 @@ const renderMarkdown = (markdown) => window.marked
   ? window.marked.parse(markdown)
   : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
+const brandLogo = '<img class="brand-logo" src="./favicon.svg" alt="">';
 const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
   <a href="https://github.com/rexondex" target="_blank" rel="noopener"><span>GitHub<small>github.com/rexondex</small></span>${svg('external')}</a>
   <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>rexondex.tistory.com</small></span>${svg('external')}</a>
@@ -172,8 +173,8 @@ class ArchiveApp {
   shell() {
     return `
     <div class="social-shell">
-      <header class="mobile-header"><a href="./">rexondex</a><span id="mobileViewTitle" aria-live="polite">일기</span></header>
-      <aside class="side-nav"><a class="wordmark" href="./">rexondex<small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
+      <header class="mobile-header"><a href="./">${brandLogo}<span>rexondex</span></a><span id="mobileViewTitle" aria-live="polite">일기</span></header>
+      <aside class="side-nav"><a class="wordmark" href="./">${brandLogo}<span>rexondex</span><small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
       <main class="main-column">
         <section class="view feed-view" id="feedView" aria-labelledby="feedTitle"><header class="view-header"><h1 id="feedTitle">일기</h1><p>최근 기록부터 표시됩니다.</p></header><div id="feedList"></div><button class="feed-more" id="feedMore" type="button">이전 기록 더 보기</button></section>
         <section class="view calendar-view" id="calendarView" aria-labelledby="calendarPageTitle" hidden>
@@ -184,7 +185,7 @@ class ArchiveApp {
         <section class="view profile-view" id="profileView" aria-labelledby="profileTitle" hidden><header class="view-header"><h1>프로필</h1><p>사용자 정보와 연결된 링크입니다.</p></header><div class="profile-card">${profileImage}<div><h2 id="profileTitle">rexondex</h2><p>@rexondex</p></div></div><dl><div><dt>작성한 날</dt><dd>${this.archive.ids.length}</dd></div><div><dt>수록 연도</dt><dd>${this.archive.years.length}</dd></div><div><dt>최근 기록</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl><h2 class="profile-section-title">링크</h2>${socialLinks()}</section>
         <section class="view settings-view" id="settingsView" aria-labelledby="settingsTitle" hidden><header class="view-header"><h1 id="settingsTitle">설정</h1><p>화면 표시 방식을 선택합니다.</p></header><div class="setting-group"><h2>화면 모드</h2>${THEMES.map((theme) => `<button type="button" data-theme-id="${theme.id}"><span>${theme.name}<small>${theme.description}</small></span><b>✓</b></button>`).join('')}</div></section>
       </main>
-      <aside class="right-panel"><div class="right-card"><div class="mini-profile">${profileImage}<div><strong>rexondex</strong><span>@rexondex</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl>${socialLinks(true)}</div></aside>
+      <aside class="right-panel"><div class="right-card"><div class="mini-profile">${brandLogo}<div><strong>rexondex</strong><span>diary archive</span></div></div><dl><div><dt>기록</dt><dd>${this.archive.ids.length}</dd></div><div><dt>최근</dt><dd>${this.archive.ids.at(-1) || '—'}</dd></div></dl>${socialLinks(true)}</div></aside>
       <nav class="bottom-nav" aria-label="주요 메뉴">${this.navItems()}</nav>
     </div>`;
   }
