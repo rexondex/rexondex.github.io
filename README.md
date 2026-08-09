@@ -1,4 +1,4 @@
-# REXONDEX Diary
+# REXONDEX Archive
 
 HTML, CSS, JavaScript만 사용하는 정적 개인 일기장입니다.
 

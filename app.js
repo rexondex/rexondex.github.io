@@ -174,7 +174,7 @@
       return `
     <div class="social-shell">
       <header class="mobile-header"><a href="./">${brandLogo}<span>rexondex</span></a><span id="mobileViewTitle" aria-live="polite">일기</span></header>
-      <aside class="side-nav"><a class="wordmark" href="./">${brandLogo}<span>rexondex</span><small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
+      <aside class="side-nav"><a class="wordmark" href="./">${brandLogo}<span>rexondex</span><small>archive</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
       <main class="main-column">
         <section class="view feed-view" id="feedView" aria-labelledby="feedTitle"><header class="view-header"><h1 id="feedTitle">일기</h1><p>최근 기록부터 표시됩니다.</p></header><div id="feedList"></div><button class="feed-more" id="feedMore" type="button">이전 기록 더 보기</button></section>
         <section class="view calendar-view" id="calendarView" aria-labelledby="calendarPageTitle" hidden>
