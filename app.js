@@ -118,7 +118,7 @@ class ThemeManager {
     if (!THEMES.some((theme) => theme.id === id)) return;
     this.current = id; document.documentElement.dataset.theme = id;
     this.storage.setItem('archive-theme', id);
-    const colors = { light: '#f7f7f5', dark: '#151515' };
+    const colors = { light: '#f5f6f8', dark: '#0f1115' };
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
   }
 }

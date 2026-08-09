@@ -2,7 +2,7 @@
 html { min-width: 320px; background: var(--bg); scroll-behavior: smooth; }
 body { min-height: 100vh; margin: 0; background: var(--bg); color: var(--text); font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button, a { color: inherit; font: inherit; } button { cursor: pointer; } a { text-underline-offset: 3px; }
-button:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 [hidden] { display: none !important; }
 .social-shell { display: grid; grid-template-columns: 230px minmax(0, 640px) 280px; justify-content: center; min-height: 100vh; }
@@ -31,13 +31,13 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 
 /* Shared layout rhythm and interaction states */
-.side-nav nav button.active { background: var(--surface-2); }
+.side-nav nav button.active { background: var(--accent-soft); color: var(--accent); }
 .main-column { box-shadow: 0 0 0 1px color-mix(in srgb, var(--border) 35%, transparent); }
 .view-header { min-height: 68px; display: flex; flex-direction: column; justify-content: center; }
-.feed-more { display: block; width: calc(100% - 40px); min-height: 46px; margin: 20px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-weight: 600; }
+.feed-more { display: block; width: calc(100% - 40px); min-height: 46px; margin: 20px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); font-weight: 600; transition: border-color var(--transition), background var(--transition); }
 .feed-more:hover { background: var(--surface-2); }
 .feed-more:disabled { color: var(--muted); cursor: wait; }
-.diary-post { padding: 22px 24px 24px; transition: background-color .15s ease; }
+.diary-post { padding: 22px 24px 24px; transition: background-color var(--transition); }
 .diary-post:hover { background: color-mix(in srgb, var(--text) 1.5%, var(--surface)); }
 .diary-post>header { margin-bottom: 18px; }
 .post-avatar, .avatar { width: 44px; height: 44px; }
@@ -46,16 +46,16 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
 .post-reference { min-height: 48px; margin-bottom: 18px; }
 .diary-post>footer { margin-top: 20px; }
 .right-panel { padding-top: 24px; }
-.right-card { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.right-card { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-panel); }
 .right-card dl { margin-block: 18px 10px; }
 .social-links.compact a { min-height: 44px; }
 .profile-card { padding-top: 32px; }
 .profile-card h2 { margin: 0; font-size: 24px; }
-.profile-view dl, .social-links, .setting-group { border-color: var(--border); border-radius: 12px; }
+.profile-view dl, .social-links, .setting-group { border-color: var(--border); border-radius: var(--radius-md); }
 .social-links a, .setting-group button { min-height: 58px; }
 .calendar-tools { min-height: 74px; align-items: center; }
 .year-nav button, .month-stepper button { min-height: 44px; }
-.calendar-card { border-radius: 12px; }
+.calendar-card { border-radius: var(--radius-md); box-shadow: var(--shadow-panel); }
 
 @media (max-width: 620px) {
   .main-column { box-shadow: none; }
