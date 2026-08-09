@@ -47,7 +47,6 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
 .diary-post>footer { margin-top: 20px; }
 .right-panel { padding-top: 24px; }
 .right-card { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-panel); }
-.mini-profile .brand-logo { width: 44px; height: 44px; border: 1px solid var(--border); border-radius: var(--radius-md); }
 .right-card dl { margin-block: 18px 10px; }
 .social-links.compact a { min-height: 44px; }
 .profile-card { padding-top: 32px; }
