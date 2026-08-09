@@ -89,7 +89,7 @@ class ArchiveStore extends EventTarget {
     this.archive = archive;
     this.state = {
       year: archive.latest.getFullYear(), month: archive.latest.getMonth(),
-      activeId: null, referenceIds: new Set()
+      referenceIds: new Set()
     };
   }
   emit() { this.dispatchEvent(new CustomEvent('change', { detail: this.state })); }
@@ -98,17 +98,7 @@ class ArchiveStore extends EventTarget {
     const date = new Date(this.state.year, this.state.month + offset, 1);
     this.view(date.getFullYear(), date.getMonth());
   }
-  open(id) {
-    if (!this.archive.idSet.has(id)) return;
-    const date = this.archive.dates[this.archive.ids.indexOf(id)];
-    this.state.activeId = id; this.state.year = date.getFullYear(); this.state.month = date.getMonth(); this.emit();
-  }
-  close() { this.state.activeId = null; this.emit(); }
   setReferences(ids) { this.state.referenceIds = ids; this.emit(); }
-  adjacent(offset) {
-    const index = this.archive.ids.indexOf(this.state.activeId);
-    return this.archive.ids[index + offset] || null;
-  }
 }
 
 
@@ -117,9 +107,9 @@ const THEMES = [
   { id: 'dark', name: '어둡게', description: '검은색 배경' }
 ];
 
-class ThemeManager extends EventTarget {
+class ThemeManager {
   constructor(storage = localStorage) {
-    super(); this.storage = storage;
+    this.storage = storage;
     this.current = THEMES.some((theme) => theme.id === document.documentElement.dataset.theme)
       ? document.documentElement.dataset.theme : 'light';
     this.apply(this.current);
@@ -130,7 +120,6 @@ class ThemeManager extends EventTarget {
     this.storage.setItem('archive-theme', id);
     const colors = { light: '#f7f7f5', dark: '#151515' };
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[id]);
-    this.dispatchEvent(new CustomEvent('change', { detail: id }));
   }
 }
 
@@ -159,13 +148,19 @@ const socialLinks = (compact = false) => `<div class="social-links ${compact ? '
 </div>`;
 
 class ArchiveApp {
-  constructor(deps) { Object.assign(this, deps); this.activeView = 'feed'; }
+  constructor(deps) {
+    Object.assign(this, deps);
+    this.activeView = 'feed';
+    this.feedIds = [...this.archive.ids].reverse();
+    this.feedCursor = 0;
+    this.pageSize = 8;
+    this.referencesLoaded = false;
+  }
 
   mount() {
     this.root.innerHTML = this.shell();
-    this.els = Object.fromEntries(['feedView', 'feedList', 'calendarView', 'profileView', 'settingsView', 'yearNav', 'monthNav', 'calendar', 'calendarTitle', 'monthMeta', 'mobileViewTitle'].map((id) => [id, document.getElementById(id)]));
-    this.bind(); this.renderCalendar(); this.renderYears(); this.renderMonths(); this.renderFeed();
-    this.repository.findReferenceIds(this.archive.ids).then((ids) => { this.store.setReferences(ids); this.renderCalendar(); });
+    this.els = Object.fromEntries(['feedView', 'feedList', 'feedMore', 'calendarView', 'profileView', 'settingsView', 'yearNav', 'monthNav', 'calendar', 'calendarTitle', 'monthMeta', 'mobileViewTitle'].map((id) => [id, document.getElementById(id)]));
+    this.bind(); this.renderCalendar(); this.renderYears(); this.renderMonths(); this.renderNextFeedPage();
   }
 
   navItems() {
@@ -180,7 +175,7 @@ class ArchiveApp {
       <header class="mobile-header"><a href="./">rexondex</a><span id="mobileViewTitle" aria-live="polite">일기</span></header>
       <aside class="side-nav"><a class="wordmark" href="./">rexondex<small>diary</small></a><nav aria-label="주요 메뉴">${this.navItems()}</nav><p>${this.archive.ids.length}개의 기록</p></aside>
       <main class="main-column">
-        <section class="view feed-view" id="feedView" aria-labelledby="feedTitle"><header class="view-header"><h1 id="feedTitle">일기</h1><p>최근 기록부터 표시됩니다.</p></header><div id="feedList"></div></section>
+        <section class="view feed-view" id="feedView" aria-labelledby="feedTitle"><header class="view-header"><h1 id="feedTitle">일기</h1><p>최근 기록부터 표시됩니다.</p></header><div id="feedList"></div><button class="feed-more" id="feedMore" type="button">이전 기록 더 보기</button></section>
         <section class="view calendar-view" id="calendarView" aria-labelledby="calendarPageTitle" hidden>
           <header class="view-header"><h1 id="calendarPageTitle">달력</h1><p>날짜별 기록을 찾아봅니다.</p></header>
           <div class="calendar-tools"><nav id="yearNav" class="year-nav" aria-label="연도 선택"></nav><div class="month-stepper"><button data-move="-1" aria-label="이전 달">${svg('left')}</button><button data-move="1" aria-label="다음 달">${svg('right')}</button></div></div>
@@ -198,6 +193,7 @@ class ArchiveApp {
     document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => this.showView(button.dataset.view)));
     document.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', () => this.store.moveMonth(Number(button.dataset.move))));
     document.querySelectorAll('[data-theme-id]').forEach((button) => button.addEventListener('click', () => { this.themes.apply(button.dataset.themeId); this.renderThemeState(); }));
+    this.els.feedMore.addEventListener('click', () => this.renderNextFeedPage());
     this.store.addEventListener('change', () => { this.renderYears(); this.renderMonths(); this.renderCalendar(); });
     this.els.calendar.addEventListener('click', (event) => { const button = event.target.closest('[data-entry]'); if (button) this.scrollToEntry(button.dataset.entry); });
     this.renderNavState(); this.renderThemeState();
@@ -207,21 +203,43 @@ class ArchiveApp {
     this.activeView = view;
     ['feed', 'calendar', 'profile', 'settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
     this.els.mobileViewTitle.textContent = { feed: '일기', calendar: '달력', profile: '프로필', settings: '설정' }[view];
+    if (view === 'calendar') this.loadReferences();
     this.renderNavState(); window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   renderNavState() { document.querySelectorAll('[data-view]').forEach((button) => { const active = button.dataset.view === this.activeView; button.classList.toggle('active', active); if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); }); }
   renderThemeState() { document.querySelectorAll('[data-theme-id]').forEach((button) => button.classList.toggle('active', button.dataset.themeId === this.themes.current)); }
 
-  async renderFeed() {
-    this.els.feedList.innerHTML = '<div class="feed-loading">기록을 정리하는 중...</div>';
-    const posts = await Promise.all([...this.archive.ids].reverse().map(async (id) => {
+  async renderNextFeedPage() {
+    if (this.feedLoadPromise) return this.feedLoadPromise;
+    if (this.feedCursor >= this.feedIds.length) return;
+    const ids = this.feedIds.slice(this.feedCursor, this.feedCursor + this.pageSize);
+    this.els.feedMore.disabled = true;
+    this.els.feedMore.textContent = '기록을 불러오는 중...';
+    this.feedLoadPromise = Promise.all(ids.map(async (id) => {
       const entry = await this.repository.get(id), date = parseDiaryId(id);
       return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
     }));
-    this.els.feedList.innerHTML = posts.join('');
+    const posts = await this.feedLoadPromise;
+    this.feedLoadPromise = null;
+    this.els.feedList.insertAdjacentHTML('beforeend', posts.join(''));
+    this.feedCursor += ids.length;
+    this.els.feedMore.disabled = false;
+    this.els.feedMore.textContent = '이전 기록 더 보기';
+    this.els.feedMore.hidden = this.feedCursor >= this.feedIds.length;
   }
 
-  scrollToEntry(id) { this.showView('feed'); requestAnimationFrame(() => document.getElementById(`entry-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
+  async loadReferences() {
+    if (this.referencesLoaded) return;
+    this.referencesLoaded = true;
+    this.store.setReferences(await this.repository.findReferenceIds(this.archive.ids));
+  }
+
+  async scrollToEntry(id) {
+    this.showView('feed');
+    const targetIndex = this.feedIds.indexOf(id);
+    while (this.feedCursor <= targetIndex) await this.renderNextFeedPage();
+    document.getElementById(`entry-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   renderYears() { this.els.yearNav.innerHTML = this.archive.years.map((year) => `<button class="${year === this.store.state.year ? 'active' : ''}" data-year="${year}">${year}<small>${this.archive.count(year)}</small></button>`).join(''); this.els.yearNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(Number(button.dataset.year), this.store.state.month))); }
   renderMonths() { this.els.monthNav.innerHTML = Array.from({ length: 12 }, (_, month) => `<button class="${month === this.store.state.month ? 'active' : ''}" data-month="${month}">${month + 1}월</button>`).join(''); this.els.monthNav.querySelectorAll('button').forEach((button) => button.addEventListener('click', () => this.store.view(this.store.state.year, Number(button.dataset.month)))); }
   renderCalendar() {
