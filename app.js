@@ -163,12 +163,12 @@
   const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
   const brandLogo = '<img class="brand-logo" src="./favicon.svg" alt="">';
   const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
-  <a href="https://github.com/rexondex" target="_blank" rel="noopener"><span>GitHub<small>github.com/rexondex</small></span>${svg('external')}</a>
-  <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>rexondex.tistory.com</small></span>${svg('external')}</a>
-  <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>u/rexondex</small></span>${svg('external')}</a>
-  <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>@rexon-dex</small></span>${svg('external')}</a>
-  <a href="https://x.com/rexon_dex" target="_blank" rel="noopener"><span>X<small>@rexon_dex</small></span>${svg('external')}</a>
-  <a href="https://bsky.app/profile/rexondex.bsky.social" target="_blank" rel="noopener"><span>BlueSky<small>rexondex.bsky.social</small></span>${svg('external')}</a>
+  <a href="https://github.com/rexondex" target="_blank" rel="noopener"><span>GitHub<small>https://github.com/rexondex</small></span>${svg('external')}</a>
+  <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>https://rexondex.tistory.com</small></span>${svg('external')}</a>
+  <a href="https://x.com/rexon_dex" target="_blank" rel="noopener"><span>X<small>https://x.com/rexon_dex</small></span>${svg('external')}</a>
+  <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>https://www.youtube.com/@rexon-dex</small></span>${svg('external')}</a>
+  <a href="https://bsky.app/profile/rexondex.bsky.social" target="_blank" rel="noopener"><span>Bluesky<small>https://bsky.app/profile/rexondex.bsky.social</small></span>${svg('external')}</a>
+  <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>https://www.reddit.com/user/rexondex</small></span>${svg('external')}</a>
 </div>`;
 
   class ArchiveApp {
