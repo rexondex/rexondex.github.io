@@ -148,7 +148,7 @@
   const svg = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const renderMarkdown = (markdown) => window.marked
-    ? window.marked.parse(markdown)
+    ? window.marked.parse(markdown, { breaks: true })
     : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
   const renderReferences = (references) => references.length ? `<div class="post-references" aria-label="참고 링크">${references.map((reference) => `<a class="post-reference" href="${escapeHtml(reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(reference.label)}</span>${svg('external')}</a>`).join('')}</div>` : '';
   const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
