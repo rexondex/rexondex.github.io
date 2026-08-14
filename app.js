@@ -26,6 +26,16 @@
     return '';
   };
 
+  const formatLinkLabel = (href, fallback) => {
+    try {
+      const url = new URL(href);
+      if (!/^https?:$/i.test(url.protocol)) return fallback;
+      const host = url.host.replace(/^www\./, '');
+      const path = url.pathname.split('/').filter(Boolean).slice(0, 2).join('/');
+      return path ? `${host}/${path}` : host;
+    } catch { return fallback; }
+  };
+
   const parseDiaryMarkdown = (source) => {
     const markdown = source.replace(/^\uFEFF/, '');
     const lines = markdown.split(/\r?\n/);
@@ -43,8 +53,7 @@
       const href = normalizeLink(raw);
       if (!href) return { markdown, references: [] };
 
-      let label = match[2] ? match[1].trim() : raw;
-      try { if (label === raw) label = new URL(href).hostname.replace(/^www\./, ''); } catch { /* local URL */ }
+      const label = match[2] ? match[1].trim() : formatLinkLabel(href, raw);
       references.push({ href, label });
       cursor = linkPattern.lastIndex;
     }
