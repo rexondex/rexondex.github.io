@@ -30,15 +30,27 @@
     const markdown = source.replace(/^\uFEFF/, '');
     const lines = markdown.split(/\r?\n/);
     const first = (lines[0] || '').trim();
-    const mdLink = first.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    const bracketLink = first.match(/^\[([^\]]+)\]$/);
-    if (!mdLink && !bracketLink) return { markdown, reference: null };
-    const raw = (mdLink ? mdLink[2] : bracketLink[1]).trim();
-    const href = normalizeLink(raw);
-    if (!href) return { markdown, reference: null };
-    let label = mdLink?.[1]?.trim() || raw;
-    try { if (label === raw) label = new URL(href).hostname.replace(/^www\./, ''); } catch { /* local URL */ }
-    return { markdown: lines.slice(1).join('\n'), reference: { href, label } };
+    const references = [];
+    const linkPattern = /\[([^\]]+)\](?:\(([^)]+)\))?/gy;
+    let cursor = 0;
+
+    while (cursor < first.length) {
+      linkPattern.lastIndex = cursor;
+      const match = linkPattern.exec(first);
+      if (!match) return { markdown, references: [] };
+
+      const raw = (match[2] || match[1]).trim();
+      const href = normalizeLink(raw);
+      if (!href) return { markdown, references: [] };
+
+      let label = match[2] ? match[1].trim() : raw;
+      try { if (label === raw) label = new URL(href).hostname.replace(/^www\./, ''); } catch { /* local URL */ }
+      references.push({ href, label });
+      cursor = linkPattern.lastIndex;
+    }
+
+    if (!references.length) return { markdown, references: [] };
+    return { markdown: lines.slice(1).join('\n'), references };
   };
 
   const createArchive = (rawIds) => {
@@ -75,7 +87,7 @@
 
     async findReferenceIds(ids) {
       const references = await Promise.all(ids.map(async (id) => {
-        try { return (await this.get(id)).reference ? id : null; }
+        try { return (await this.get(id)).references.length ? id : null; }
         catch { return null; }
       }));
       return new Set(references.filter(Boolean));
@@ -138,6 +150,7 @@
   const renderMarkdown = (markdown) => window.marked
     ? window.marked.parse(markdown)
     : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+  const renderReferences = (references) => references.length ? `<div class="post-references" aria-label="참고 링크">${references.map((reference) => `<a class="post-reference" href="${escapeHtml(reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(reference.label)}</span>${svg('external')}</a>`).join('')}</div>` : '';
   const profileImage = '<img class="avatar" src="./rexondex.jpg" alt="rexondex 프로필 이미지">';
   const brandLogo = '<img class="brand-logo" src="./favicon.svg" alt="">';
   const socialLinks = (compact = false) => `<div class="social-links ${compact ? 'compact' : ''}">
@@ -219,7 +232,7 @@
       this.els.feedMore.textContent = '기록을 불러오는 중...';
       this.feedLoadPromise = Promise.all(ids.map(async (id) => {
         const entry = await this.repository.get(id), date = parseDiaryId(id);
-        return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${entry.reference ? `<a class="post-reference" href="${escapeHtml(entry.reference.href)}" target="_blank" rel="noopener"><span>${escapeHtml(entry.reference.label)}</span>${svg('external')}</a>` : ''}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
+        return `<article class="diary-post" id="entry-${id}"><header><img class="post-avatar" src="./rexondex.jpg" alt=""><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${renderReferences(entry.references)}<div class="post-content">${renderMarkdown(entry.markdown)}</div><footer><span>${id}</span></footer></article>`;
       }));
       const posts = await this.feedLoadPromise;
       this.feedLoadPromise = null;

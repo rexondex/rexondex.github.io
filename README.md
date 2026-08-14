@@ -84,6 +84,20 @@ git push origin main
 [관련 자료](https://example.com)
 ```
 
+여러 링크를 표시하려면 첫 줄에 대괄호 링크를 이어서 작성합니다. 각 링크는 피드에서 별도의 링크 배지로 표시됩니다.
+
+```md
+[https://example.com][https://github.com/rexondex][https://rexondex.tistory.com]
+
+둘째 줄부터 일기 본문입니다.
+```
+
+이름을 붙인 Markdown 링크도 연속해서 사용할 수 있습니다.
+
+```md
+[관련 자료](https://example.com)[오늘의 커밋](https://github.com/rexondex)
+```
+
 ## 로컬에서 확인
 
 일기 파일을 `fetch`로 읽으므로 `index.html`을 더블클릭하지 않고 간단한 정적 서버를 사용합니다.
