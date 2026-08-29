@@ -167,7 +167,7 @@
   <a href="https://rexondex.tistory.com" target="_blank" rel="noopener"><span>Tistory<small>https://rexondex.tistory.com</small></span>${svg('external')}</a>
   <a href="https://x.com/rexon_dex" target="_blank" rel="noopener"><span>X<small>https://x.com/rexon_dex</small></span>${svg('external')}</a>
   <a href="https://www.youtube.com/@rexon-dex" target="_blank" rel="noopener"><span>YouTube<small>https://www.youtube.com/@rexon-dex</small></span>${svg('external')}</a>
-  <a href="https://bsky.app/profile/rexondex.bsky.social" target="_blank" rel="noopener"><span>Bluesky<small>https://bsky.app/profile/rexondex.bsky.social</small></span>${svg('external')}</a>
+  <a href="https://bsky.app/profile/rexondex.bsky.social" target="_blank" rel="noopener"><span>BlueSky<small>https://bsky.app/profile/rexondex.bsky.social</small></span>${svg('external')}</a>
   <a href="https://www.reddit.com/user/rexondex" target="_blank" rel="noopener"><span>Reddit<small>https://www.reddit.com/user/rexondex</small></span>${svg('external')}</a>
 </div>`;
 
