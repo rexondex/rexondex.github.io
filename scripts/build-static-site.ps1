@@ -209,6 +209,9 @@ function Render-Page([string]$path, [string]$title, [string]$description, [strin
     $safeTitle = Escape-Html $title
     $safeDescription = Escape-Html $description
     $head = [regex]::Replace($head, '<title>.*?</title>', [System.Text.RegularExpressions.MatchEvaluator]{ param($m) "<title>$safeTitle</title>" })
+    # Ask touch browsers to keep the page at its designed scale and avoid
+    # double-tap zoom. Some browsers may still permit zoom for accessibility.
+    $head = [regex]::Replace($head, '(?i)(<meta\s+name="viewport"\s+content=")[^"]*(")', '${1}width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no${2}')
     foreach ($name in @('description', 'og:description', 'twitter:description')) {
         $head = [regex]::Replace($head, '((?:name|property)="' + $name + '" content=")[^"]*', [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $m.Groups[1].Value + $safeDescription })
     }
