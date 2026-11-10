@@ -78,4 +78,5 @@ window.DIARY_FILES = [
   '261102.html',
   '261105.html',
   '261108.html',
+  '261110.html',
 ];
