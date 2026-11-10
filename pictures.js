@@ -164,5 +164,15 @@ window.PICTURE_SECTORS = [
                       "17849161653562407.webp",
                       "17849159214562396.webp"
                   ]
+    },
+    {
+        "id":  "folder2",
+        "descriptions":  {
+
+                         },
+        "files":  [
+                      "bafkreihzygo2bbgaihsqv2feorvzwrvb2zjduyx6l6q7ruxlf5xrfdh7v4.webp",
+                      "bafkreifqm5acwbupqnuwqydh77rn2ubtynio3hkzmn3qbbvruwhs2yl35q.webp"
+                  ]
     }
 ];
