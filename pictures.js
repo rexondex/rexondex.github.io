@@ -1,4 +1,4 @@
-// File lists are generated from picture/sector folders. Photo descriptions are preserved.
+// File lists are generated from media/sector folders. Photo descriptions are preserved.
 window.PICTURE_SECTORS = [
     {
         "id":  "PIC-1",

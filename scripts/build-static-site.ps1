@@ -1,9 +1,16 @@
-﻿param([string]$SiteRoot = (Split-Path $PSScriptRoot -Parent))
+﻿param([string]$SiteRoot = (Split-Path $PSScriptRoot -Parent), [switch]$Check)
 # Scan source folders, synchronize lists, and refresh the complete static site.
 # No dependencies; compatible with Windows PowerShell 5.1 and PowerShell 7.
 $ErrorActionPreference = 'Stop'
+$phase = 'initialization'
+trap {
+    [Console]::Error.WriteLine("FAIL [$phase]: $($_.Exception.Message)")
+    [Console]::Error.WriteLine("Location: $($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber)")
+    exit 1
+}
 $siteRoot = [IO.Path]::GetFullPath($SiteRoot)
 . (Join-Path $PSScriptRoot 'manifest.ps1')
+. (Join-Path $PSScriptRoot 'validate-static-site.ps1')
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 $script:pendingFiles = [ordered]@{}
 function Read-SiteFile([string]$path) {
@@ -15,6 +22,8 @@ function Write-SiteFile([string]$path, [string]$content) {
 }
 function Escape-Html([string]$value) { [System.Net.WebUtility]::HtmlEncode($value) }
 
+$phase = 'diary discovery'
+Write-Output '[1/4] Reading diaries and media...'
 $databaseRoot = Join-Path $siteRoot 'database'
 if (!(Test-Path -LiteralPath $databaseRoot -PathType Container)) { throw "Diary folder not found: '$databaseRoot'. Create database/ and add a valid YYMMDD.html file." }
 $diaryFolders = @(Get-ChildItem -LiteralPath $databaseRoot -Directory | Where-Object { $_.Name -match '^[0-9]{6}\.html$' })
@@ -39,13 +48,17 @@ if (Test-Path -LiteralPath (Join-Path $siteRoot 'pictures.js')) {
 }
 $imagePattern = '^[^/\\]+\.(jpe?g|png|webp|gif|avif|heic)$'
 $imageLikePattern = '\.(jpe?g|png|webp|gif|avif|heic|bmp|svg|tiff?|ico|jfif|apng)$'
-$pictureRoot = Join-Path $siteRoot 'picture'
+$mediaRoot = Join-Path $siteRoot 'media'
+if (!(Test-Path -LiteralPath $mediaRoot -PathType Container)) { throw "Missing media/ folder. Store original photos in media/PIC-1/, media/PIC-2/, etc." }
+foreach ($oldFolder in @('picture', 'picutre')) {
+    if (Test-Path -LiteralPath (Join-Path $siteRoot $oldFolder)) { throw "Obsolete '$oldFolder/' folder found. Move photo sectors into media/; gallery HTML belongs in pictures/." }
+}
 $sectorFolders = @()
-if (Test-Path -LiteralPath $pictureRoot -PathType Container) {
-    if (Get-ChildItem -LiteralPath $pictureRoot -File | Where-Object { $_.Name -match $imageLikePattern }) {
-        throw 'Photos must be inside a sector folder. Move them to picture/sector-1/photo.jpg (or another sector folder).'
+if (Test-Path -LiteralPath $mediaRoot -PathType Container) {
+    if (Get-ChildItem -LiteralPath $mediaRoot -File | Where-Object { $_.Name -match $imageLikePattern }) {
+        throw 'Photos must be inside a sector folder. Move them to media/sector-1/photo.jpg (or another sector folder).'
     }
-    $sectorFolders = @(Get-ChildItem -LiteralPath $pictureRoot -Directory | Sort-Object { [regex]::Replace($_.Name, '\d+', { param($m) $m.Value.PadLeft(20, '0') }) })
+    $sectorFolders = @(Get-ChildItem -LiteralPath $mediaRoot -Directory | Sort-Object { [regex]::Replace($_.Name, '\d+', { param($m) $m.Value.PadLeft(20, '0') }) })
 }
 $discoveredSectors = @(foreach ($folder in $sectorFolders) {
     $directFiles = @(Get-ChildItem -LiteralPath $folder.FullName -File)
@@ -57,8 +70,7 @@ $discoveredSectors = @(foreach ($folder in $sectorFolders) {
         throw "Nested photo folders are not supported. Move '$($nestedImages[0].FullName)' directly into '$($folder.FullName)'."
     }
     if ($folder.Name -notmatch '^[a-zA-Z0-9-]+$') {
-        if ($files.Count -or $unsupportedImages.Count) { throw "Photo sector '$($folder.Name)' has an invalid name. Rename the folder using only letters, numbers and hyphens." }
-        continue
+        throw "Photo sector '$($folder.Name)' has an invalid name. Rename the folder using only letters, numbers and hyphens."
     }
     $descriptions = [ordered]@{}
     $previous = $previousSectors[$folder.Name]
@@ -69,10 +81,11 @@ $discoveredSectors = @(foreach ($folder in $sectorFolders) {
     }
     [ordered]@{ id = $folder.Name; descriptions = $descriptions; files = $files }
 })
+if (!$discoveredSectors.Count) { throw 'No photo sectors found. Keep at least media/PIC-1/ (it may be empty) so pictures.html always has a gallery.' }
 $listing = @($ids | Sort-Object | ForEach-Object { "  '$($diaryFiles[$_])'," }) -join "`n"
-Write-SiteFile 'database.js' ("// Generated from database/ by scripts/update-seo.ps1. Add HTML files to the folder.`nwindow.DIARY_FILES = [`n$listing`n];`n")
+Write-SiteFile 'database.js' ("// Generated from database/ by scripts/build-static-site.ps1. Add HTML files to the folder.`nwindow.DIARY_FILES = [`n$listing`n];`n")
 $pictureJson = ConvertTo-Json -InputObject $discoveredSectors -Depth 8
-Write-SiteFile 'pictures.js' ("// File lists are generated from picture/sector folders. Photo descriptions are preserved.`nwindow.PICTURE_SECTORS = $pictureJson;`n")
+Write-SiteFile 'pictures.js' ("// File lists are generated from media/sector folders. Photo descriptions are preserved.`nwindow.PICTURE_SECTORS = $pictureJson;`n")
 function Read-DiarySection([string]$html, [string]$className) {
     $opening = [regex]::Match($html, '(?is)<div\b(?=[^>]*\bclass\s*=\s*["''][^"'']*\b' + $className + '\b[^"'']*["''])[^>]*>')
     if (!$opening.Success) { return $null }
@@ -238,6 +251,8 @@ function Render-Page([string]$path, [string]$title, [string]$description, [strin
     Write-SiteFile $path "<!doctype html>`n<html lang=""ko"">`n<head>`n$base$head`n<script type=""application/ld+json"">$json</script>`n$scripts`n</head>`n<body $attributes><div id=""app"">`n<!-- STATIC-ARCHIVE:START -->`n$body`n<!-- STATIC-ARCHIVE:END -->`n</div>$noscript</body>`n</html>`n"
 }
 
+$phase = 'page rendering'
+Write-Output '[2/4] Rendering static pages in memory...'
 $culture = [Globalization.CultureInfo]::GetCultureInfo('ko-KR')
 $posts = for ($i = 0; $i -lt $ids.Count; $i++) {
     $id = $ids[$i]
@@ -342,8 +357,8 @@ for ($i = 0; $i -lt $sectors.Count; $i++) {
     }
     $images = foreach ($file in ($sector.files | Sort-Object -Unique -Descending)) {
         if ($file -notmatch '^[^/\\]+\.(jpe?g|png|webp|gif|avif|heic)$') { throw "Invalid picture filename: $file" }
-        if (!(Test-Path -LiteralPath (Join-Path $siteRoot "picture/$($sector.id)/$file"))) { throw "Missing picture: $file" }
-        $src = "./picture/$($sector.id)/$([uri]::EscapeDataString($file))"
+        if (!(Test-Path -LiteralPath (Join-Path $siteRoot "media/$($sector.id)/$file"))) { throw "Missing picture: $file" }
+        $src = "./media/$($sector.id)/$([uri]::EscapeDataString($file))"
         $alt = ''
         if ($sector.descriptions -and $sector.descriptions.PSObject.Properties[$file]) { $alt = Escape-Html $sector.descriptions.PSObject.Properties[$file].Value }
         $label = if ($alt) { $alt } else { Escape-Html "$($sector.id)/$file 사진 크게 보기" }
@@ -357,12 +372,25 @@ for ($i = 0; $i -lt $sectors.Count; $i++) {
     # HEIC is available to visitors but isn't a supported Google Images format.
     $imageEntries = foreach ($file in $sector.files) {
         if ($file -notmatch '\.heic$') {
-            '<image:image><image:loc>' + $siteUrl + 'picture/' + $sector.id + '/' + [uri]::EscapeDataString($file) + '</image:loc></image:image>'
+            '<image:image><image:loc>' + $siteUrl + 'media/' + $sector.id + '/' + [uri]::EscapeDataString($file) + '</image:loc></image:image>'
         }
     }
     $sitemapEntries.Add("<url><loc>$siteUrl$path</loc>$($imageEntries -join '')</url>")
 }
 Write-SiteFile 'sitemap.xml' ('<?xml version="1.0" encoding="UTF-8"?>' + "`n" + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' + "`n" + ($sitemapEntries -join "`n") + "`n</urlset>`n")
+$phase = 'site consistency validation'
+Write-Output '[3/4] Checking pages, manifests, media and local links...'
+Test-StaticSite -Root $siteRoot -Overlay $script:pendingFiles
+if ($Check) {
+    $changed = @($script:pendingFiles.Keys | Where-Object {
+        !(Test-Path -LiteralPath (Join-Path $siteRoot $_) -PathType Leaf) -or (Read-SiteFile $_) -cne $script:pendingFiles[$_]
+    })
+    if ($changed.Count) { throw "Generated output is out of date: $($changed -join ', '). Run scripts/build-static-site.ps1 without -Check to render it." }
+    Write-Output '[4/4] PASS: generated files are current; no files changed.'
+    return
+}
+$phase = 'writing generated files'
+Write-Output '[4/4] Saving validated pages with rollback protection...'
 # All parsing and generation completed in memory. Stage every output and backup before replacing any file.
 $writeId = [guid]::NewGuid().ToString('N')
 $transactions = [System.Collections.Generic.List[object]]::new()

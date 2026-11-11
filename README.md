@@ -14,12 +14,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 
 성공하면 `Updated snapshots and sitemap…` 메시지가 표시됩니다. 그 뒤 변경 파일을 확인하고 직접 커밋·푸시합니다. 이 명령은 Git 명령을 실행하거나 자동으로 푸시하지 않습니다.
 
+파일을 바꾸지 않고 입력·생성 결과의 정합성과 재생성 필요 여부만 확인하려면:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1 -Check
+```
+
+실행 중 수집 → 렌더링 → 전체 검사 → 저장의 네 단계가 표시됩니다. 실패하면 `FAIL [단계]`, 오류 원인, 관련 파일과 스크립트 위치를 표시하고 종료 코드 1을 반환합니다. `-Check`에서 오래된 결과가 발견되면 위의 일반 생성 명령을 실행합니다.
+
 ## 한눈에 보는 구조
 
 ```mermaid
 flowchart TD
     Diary[database/YYMMDD.html<br/>일기 HTML 및 본문 원본]
-    Photos[picture/섹터/사진파일<br/>사진 원본]
+    Photos[media/섹터/사진파일<br/>사진 원본]
     Descriptions[pictures.js<br/>사진 설명]
     Generator[scripts/build-static-site.ps1<br/>수집 · 파싱 · 정적 페이지 생성]
     DiaryList[database.js<br/>일기 파일 목록]
@@ -59,7 +67,7 @@ git push
 
 ## 페이지가 만들어지는 과정
 
-1. `build-static-site.ps1`이 `database/`의 일기 파일과 `picture/` 아래 섹터 폴더·사진을 검색합니다.
+1. `build-static-site.ps1`이 `database/`의 일기 파일과 `media/` 아래 섹터 폴더·사진을 검색합니다.
 2. 일기 날짜와 사진 파일 목록을 검증하고, 기존 사진 설명을 읽습니다.
 3. `database.js`, `pictures.js`의 목록을 실제 파일 구성에 맞춰 다시 생성합니다.
 4. 일기별 HTML 페이지와 홈·전체 일기·사진 갤러리의 초기 정적 본문을 만듭니다.
@@ -171,10 +179,12 @@ HTML 예시:
 
 ## 사진 폴더 규칙과 파싱 방식
 
+원본은 **`media/`**, 화면에 표시할 갤러리 HTML은 여러 사진 모음을 뜻하는 복수형 **`pictures/`**로 고정합니다. 첫 섹터는 `pictures.html`, 나머지는 `pictures/섹터.html`입니다. `pictures.js`와 사진 화면의 이름도 그대로 사용합니다. 기존 `picture/` 또는 오타인 `picutre/`가 있으면 생성기가 이전 구조로 판단해 중단합니다.
+
 사진은 섹터 폴더 바로 안에 둡니다.
 
 ```text
-picture/
+media/
 ├─ sector-1/
 │  ├─ photo.jpg
 │  └─ another.webp
@@ -182,11 +192,12 @@ picture/
    └─ image.png
 ```
 
-- 검색 범위는 `picture/` 바로 아래의 섹터 폴더 한 단계와 그 폴더 바로 안의 파일입니다.
+- 검색 범위는 `media/` 바로 아래의 섹터 폴더 한 단계와 그 폴더 바로 안의 파일입니다.
 - 폴더 이름은 영문·숫자·하이픈만 사용합니다. 예: `sector-2`, `travel-2026`.
+- 섹터는 최소 하나 유지합니다. 예: `media/PIC-1/`. 사진이 없는 빈 섹터도 렌더링할 수 있습니다.
 - 사진을 섹터 폴더보다 더 깊은 하위 폴더에 넣으면 검색하지 않습니다.
 - 지원 확장자: JPG, JPEG, PNG, WebP, GIF, AVIF, HEIC.
-- `picture/` 루트에 사진을 직접 두면 위치 안내 오류를 내고 중단합니다.
+- `media/` 루트에 사진을 직접 두면 위치 안내 오류를 내고 중단합니다.
 - 파일명은 URL 경로로 인코딩되어 링크에 반영됩니다.
 - 사진 섹터별 갤러리 HTML과 이미지 사이트맵을 생성합니다. HEIC는 방문자에게 제공하지만 Google 이미지 사이트맵에서는 제외합니다.
 
@@ -197,7 +208,7 @@ picture/
 | 파일/폴더 | 역할 | 직접 편집 여부 |
 |---|---|---|
 | `database/YYMMDD.html` | 일기 본문 원본이자 일기별 정적 페이지 | 본문 편집 |
-| `picture/섹터/` | 사진 원본 | 파일 추가·삭제 |
+| `media/섹터/` | 사진 원본 | 파일 추가·삭제 |
 | `scripts/build-static-site.ps1` | 원본 검색, 파싱, 검증, 정적 HTML·메타·사이트맵 생성 | 동작 변경 시 편집 |
 | `docs/SEO-SCRIPT-CONTRACT.md` | 입력 인터페이스·생성 결과·거부·복구 규칙의 기준 설계 문서 | 기능 계약 변경 시 함께 편집 |
 | `scripts/manifest.ps1` | `pictures.js` 같은 JavaScript 배열을 실행하지 않고 읽고, 목록 형식을 검증하는 공통 함수 | 보통 편집하지 않음 |
@@ -258,6 +269,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
 ```
 
 이 검사는 파일을 수정하지 않고 sitemap XML, 실제 페이지 존재 여부, canonical·구조화 데이터, 일기 목록, 이미지 경로와 로컬 링크를 확인합니다.
+
+동일한 검사가 일반 생성 명령에서도 **저장 전 메모리의 생성 결과**에 자동 적용됩니다. 일기·사진 목록과 실제 파일, 갤러리의 사진 수와 경로, 사이트맵의 전체 페이지·이미지 목록, 경로의 대소문자까지 확인합니다. 외부 HTTP(S) 링크의 접속 여부와 브라우저의 이미지 디코딩·JavaScript 실행은 검사하지 않습니다. 사라진 섹터의 `pictures/*.html`이 남으면 오류에 표시된 예전 생성 파일을 검토·삭제한 뒤 다시 실행합니다.
+
+생성기 수정 후에는 격리된 임시 사이트에서 정상 생성·빈 갤러리·잘못된 날짜·끊어진 경로·대소문자 오류·오래된 출력·이전 폴더명과 실패 시 출력 보존을 검사할 수 있습니다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-static-site.ps1
+```
 
 ## GitHub Pages와 예전 링크
 

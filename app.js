@@ -195,10 +195,10 @@
 
     navItems() {
       return [
-        ['feed', '일기', 'feed'], ['picture', '사진', 'picture'], ['calendar', '달력', 'calendar'], ['profile', '프로필', 'user'], ['settings', '설정', 'settings']
+        ['feed', '일기', 'feed'], ['media', '사진', 'media'], ['calendar', '달력', 'calendar'], ['profile', '프로필', 'user'], ['settings', '설정', 'settings']
       ].map(([view, label, icon]) => {
         const content = `${svg(icon)}<span>${label}</span>`;
-        if (view === 'feed' || view === 'picture') return `<a href="${view === 'feed' ? './' : './pictures.html'}" data-view="${view}" aria-label="${label}">${content}</a>`;
+        if (view === 'feed' || view === 'media') return `<a href="${view === 'feed' ? './' : './pictures.html'}" data-view="${view}" aria-label="${label}">${content}</a>`;
         return `<button type="button" data-view="${view}" aria-label="${label}">${content}</button>`;
       }).join('');
     }
@@ -265,7 +265,7 @@
 
     showView(view) {
       this.activeView = view;
-      ['feed', 'picture', 'calendar', 'profile', 'settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
+      ['feed', 'media', 'calendar', 'profile', 'settings'].forEach((name) => { document.getElementById(`${name}View`).hidden = name !== view; });
       this.els.mobileViewTitle.textContent = { feed: '일기', picture: '사진', calendar: '달력', profile: '프로필', settings: '설정' }[view];
       if (view === 'calendar') this.loadReferences();
       this.renderNavState(); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -273,7 +273,7 @@
     renderNavState() { document.querySelectorAll('[data-view]').forEach((button) => { const active = button.dataset.view === this.activeView; button.classList.toggle('active', active); if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); }); }
     renderThemeState() { document.querySelectorAll('[data-theme-id]').forEach((button) => button.classList.toggle('active', button.dataset.themeId === this.themes.current)); }
 
-    picturePath(sector, file) { return `./picture/${encodeURIComponent(sector)}/${encodeURIComponent(file)}`; }
+    picturePath(sector, file) { return `./media/${encodeURIComponent(sector)}/${encodeURIComponent(file)}`; }
     renderPictureSectors() {
       this.els.pictureSectorNav.innerHTML = this.pictureSectors.map((sector, index) => `<a href="${index === 0 ? './pictures.html' : `./pictures/${encodeURIComponent(sector.id)}.html`}" class="${sector.id === this.activePictureSector ? 'active' : ''}" ${sector.id === this.activePictureSector ? 'aria-current="page"' : ''}>${escapeHtml(sector.id)}<small>${sector.files.length}</small></a>`).join('');
       this.renderPictures();

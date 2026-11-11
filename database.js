@@ -1,4 +1,4 @@
-// Generated from database/ by scripts/update-seo.ps1. Add HTML files to the folder.
+// Generated from database/ by scripts/build-static-site.ps1. Add HTML files to the folder.
 window.DIARY_FILES = [
   '260606.html',
   '260607.html',
