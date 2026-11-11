@@ -124,6 +124,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 
 원본의 부모 폴더는 `media/`, HTML 갤러리 폴더는 `pictures/`로 고정합니다. `media/`는 반드시 존재하며 섹터를 최소 하나 유지합니다. 빈 섹터는 허용합니다. 빈 폴더도 섹터 이름 규칙을 지켜야 합니다. 기존 `picture/` 또는 `picutre/`가 남아 있으면 이동 지침과 함께 거부합니다.
 
+브라우저 사진 화면의 내부 식별자는 `picture`입니다. `data-initial-view="picture"`, `pictureView`, 메뉴의 view·icon 이름은 원본 폴더명 변경과 관계없이 유지합니다. 정적 검증기는 메뉴의 화면 이름·아이콘 정의·화면 요소 ID·`showView` 목록과 페이지의 초기 화면 이름을 대조하며, 불일치하면 저장 전에 거부합니다.
+
 ## 3. 생성 결과 계약
 
 `build-static-site.ps1`은 입력을 기준으로 다음 결과를 생성하거나 갱신합니다.

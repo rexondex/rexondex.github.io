@@ -71,6 +71,21 @@ foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $siteRoot 'pictures') 
 }
 $runtime = Read-SiteFile 'app.js'
 Assert ($runtime.Contains('./media/${encodeURIComponent(sector)}/${encodeURIComponent(file)}')) 'app.js photo path must use media/<sector>/<file>.'
+# The static HTML can be valid while the runtime hides it or emits an empty icon.
+$navSource = [regex]::Match($runtime, '(?s)navItems\(\)\s*\{\s*return\s*\[(.*?)\]\.map').Groups[1].Value
+$navItems = @([regex]::Matches($navSource, '\[''(?<view>[^'']+)'',\s*''[^'']+'',\s*''(?<icon>[^'']+)''\]'))
+Assert ($navItems.Count -gt 0) 'Cannot validate app.js navigation configuration.'
+$iconSource = [regex]::Match($runtime, '(?s)const paths = \{(.*?)\n  \};').Groups[1].Value
+$viewSource = [regex]::Match($runtime, '(?s)showView\(view\)\s*\{.*?\[(.*?)\]\.forEach').Groups[1].Value
+$viewNames = @([regex]::Matches($viewSource, '''([^'']+)''') | ForEach-Object { $_.Groups[1].Value })
+$navViews = @($navItems | ForEach-Object { $_.Groups['view'].Value })
+foreach ($item in $navItems) {
+    $view = $item.Groups['view'].Value
+    $icon = $item.Groups['icon'].Value
+    Assert ($runtime.Contains('id="' + $view + 'View"')) "Navigation view '$view' has no matching section in app.js. Keep photo view IDs as picture; media/ is only the asset folder."
+    Assert ($iconSource -match ('\b' + [regex]::Escape($icon) + '\s*:')) "Navigation icon '$icon' is missing from app.js paths."
+}
+Assert (Test-SameList $navViews $viewNames) 'app.js showView list does not match navigation views.'
 $titles = @{}
 $checkedLinks = 0
 foreach ($location in $locations) {
@@ -81,6 +96,8 @@ foreach ($location in $locations) {
     if (!$relative) { $relative = 'index.html' }
     Assert (Test-SiteLeaf $relative) "Missing page: $relative"
     $html = Read-SiteFile $relative
+    $initialView = [regex]::Match($html, 'data-initial-view="([^"]+)"')
+    if ($initialView.Success) { Assert ($navViews -ccontains $initialView.Groups[1].Value) "Unknown initial view in $relative" }
     Assert (([regex]::Matches($html, '<link rel="canonical"')).Count -eq 1) "Expected one canonical: $relative"
     Assert ($html.Contains('rel="canonical" href="' + $location + '"')) "Wrong canonical: $relative"
     Assert ($html.Contains('property="og:url" content="' + $location + '"')) "Wrong sharing URL: $relative"

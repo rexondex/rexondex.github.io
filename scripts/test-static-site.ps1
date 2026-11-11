@@ -35,6 +35,14 @@ try {
     Put 'database/261101.html' '<p>Fixture diary.</p>'
     Run-Build
     Run-Build -Check
+    $runtime = [IO.File]::ReadAllText((Join-Path $fixture 'app.js'))
+    Put 'app.js' ($runtime.Replace("['picture',", "['media',"))
+    Run-Build 'Navigation view'
+    Put 'app.js' ($runtime.Replace("picture: '<rect", "missingIcon: '<rect"))
+    Run-Build 'Navigation icon'
+    Put 'app.js' ($runtime.Replace("['feed', 'picture', 'calendar'", "['feed', 'media', 'calendar'"))
+    Run-Build 'showView list'
+    Put 'app.js' $runtime
     Put 'database/261332.html' '<p>Invalid date.</p>'
     Run-Build 'Invalid diary date'
     Remove-Item -LiteralPath (Join-Path $fixture 'database/261332.html')
@@ -58,7 +66,7 @@ try {
     Run-Build -Check
     Remove-Item -LiteralPath (Join-Path $fixture 'media/PIC-1')
     Run-Build 'No photo sectors'
-    Write-Output 'PASS: generation, check mode, empty gallery, invalid dates, missing/case-sensitive links, stale galleries, stale output and legacy folders; failed builds preserve outputs.'
+    Write-Output 'PASS: generation, check mode, navigation views/icons, empty gallery, invalid dates, missing/case-sensitive links, stale galleries, stale output and legacy folders; failed builds preserve outputs.'
 } finally {
     $resolvedFixture = [IO.Path]::GetFullPath($fixture)
     $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
