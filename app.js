@@ -113,10 +113,16 @@
   ];
 
   class ThemeManager {
-    constructor(storage = localStorage) {
-      this.storage = storage;
+    constructor(storage) {
+      let saved;
+      try {
+        this.storage = storage === undefined ? window.localStorage : storage;
+        saved = this.storage?.getItem('archive-theme');
+      } catch {
+        // Storage access can fail before getItem, or while reading it.
+        this.storage = null;
+      }
       this.systemPreference = window.matchMedia('(prefers-color-scheme: dark)');
-      const saved = storage.getItem('archive-theme');
       this.current = THEMES.some((theme) => theme.id === saved) ? saved : 'system';
       const updateSystemTheme = () => {
         if (this.current === 'system') this.apply('system');
@@ -128,7 +134,8 @@
     apply(id) {
       if (!THEMES.some((theme) => theme.id === id)) return;
       this.current = id;
-      this.storage.setItem('archive-theme', id);
+      try { this.storage?.setItem('archive-theme', id); }
+      catch { this.storage = null; } // Keep the selected theme for this page.
       const resolved = id === 'system' ? (this.systemPreference.matches ? 'dark' : 'light') : id;
       document.documentElement.dataset.theme = resolved;
       const colors = { light: '#f5f6f8', dark: '#0f1115' };
@@ -184,10 +191,21 @@
 
     mount() {
       this.entryNavigation = this.entryId ? this.root.querySelector('section > footer')?.innerHTML : '';
+      // Reuse the SSG body before replacing the shell. Initial diary rendering
+      // must not depend on fetching HTML that is already present in this page.
+      const initialPosts = [];
+      for (const post of this.root.querySelectorAll('section.feed-view > article.diary-post[id]')) {
+        const id = this.feedIds[initialPosts.length];
+        if (post.id !== `daily-${id}`) break;
+        initialPosts.push(this.renderFeedEntry(id, parseDiaryHtml(post.outerHTML)));
+      }
       this.root.innerHTML = this.shell();
       this.els = Object.fromEntries(['feedView', 'pictureView', 'pictureSectorNav', 'pictureCount', 'pictureGrid', 'pictureEmpty', 'pictureDialog', 'pictureDialogImage', 'pictureDialogSector', 'pictureDialogName', 'pictureDialogSize', 'pictureDialogOriginal', 'pictureDialogClose', 'feedList', 'feedMore', 'calendarView', 'profileView', 'settingsView', 'yearNav', 'monthNav', 'calendar', 'calendarTitle', 'monthMeta', 'mobileViewTitle'].map((id) => [id, document.getElementById(id)]));
+      this.els.feedList.innerHTML = initialPosts.join('');
+      this.feedCursor = initialPosts.length;
+      this.els.feedMore.hidden = this.feedCursor >= this.feedIds.length;
       this.bind(); this.renderPictureSectors(); this.renderCalendar(); this.renderYears(); this.renderMonths();
-      if (this.activeView === 'feed') this.renderNextFeedPage();
+      if (this.activeView === 'feed' && !initialPosts.length) this.renderNextFeedPage();
       this.showView(this.activeView);
       if (this.entryId) document.getElementById('feedTitle').textContent = `${formatDate(parseDiaryId(this.entryId), false)} 일기`;
       else if (this.allEntries) document.getElementById('feedTitle').textContent = '전체 일기';
@@ -311,23 +329,36 @@
       if (!this.els.pictureDialog.open) this.els.pictureDialog.showModal();
     }
 
-    async renderNextFeedPage() {
+    renderFeedEntry(id, entry) {
+      const date = parseDiaryId(id);
+      return `<article class="diary-post" id="daily-${id}" aria-label="${escapeHtml(formatDate(date))} 일기"><header><img class="post-avatar" src="./rexondex.jpg" alt="" width="44" height="44"><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${renderReferences(entry.references)}<div class="post-content">${entry.html}</div><footer><a class="post-permalink" href="./database/${this.archive.files.get(id)}" aria-label="${id} 일기 링크">${id} · 링크</a></footer></article>`;
+    }
+
+    renderNextFeedPage() {
       if (this.feedLoadPromise) return this.feedLoadPromise;
       if (this.feedCursor >= this.feedIds.length) { this.els.feedMore.hidden = true; return; }
       const ids = this.feedIds.slice(this.feedCursor, this.feedCursor + this.pageSize);
       this.els.feedMore.disabled = true;
       this.els.feedMore.textContent = '기록을 불러오는 중...';
-      this.feedLoadPromise = Promise.all(ids.map(async (id) => {
-        const entry = await this.repository.get(id), date = parseDiaryId(id);
-        return `<article class="diary-post" id="daily-${id}" aria-label="${escapeHtml(formatDate(date))} 일기"><header><img class="post-avatar" src="./rexondex.jpg" alt="" width="44" height="44"><div><strong>rexondex</strong><time datetime="20${id.slice(0, 2)}-${id.slice(2, 4)}-${id.slice(4, 6)}">${escapeHtml(formatDate(date))}</time></div></header>${renderReferences(entry.references)}<div class="post-content">${entry.html}</div><footer><a class="post-permalink" href="./database/${this.archive.files.get(id)}" aria-label="${id} 일기 링크">${id} · 링크</a></footer></article>`;
-      }));
-      const posts = await this.feedLoadPromise;
-      this.feedLoadPromise = null;
-      this.els.feedList.insertAdjacentHTML('beforeend', posts.join(''));
-      this.feedCursor += ids.length;
-      this.els.feedMore.disabled = false;
-      this.els.feedMore.textContent = '이전 기록 더 보기';
-      this.els.feedMore.hidden = this.feedCursor >= this.feedIds.length;
+      this.els.feedList.setAttribute('aria-busy', 'true');
+      this.feedLoadPromise = (async () => {
+        try {
+          const posts = await Promise.all(ids.map(async (id) => this.renderFeedEntry(id, await this.repository.get(id))));
+          this.els.feedList.insertAdjacentHTML('beforeend', posts.join(''));
+          this.feedCursor += ids.length;
+          this.els.feedMore.textContent = '이전 기록 더 보기';
+        } catch (error) {
+          // Keep the existing posts and cursor so the same batch can be retried.
+          this.els.feedMore.textContent = '일기를 불러오지 못했습니다. 다시 시도';
+          console.warn('Could not load diary entries:', error);
+        } finally {
+          this.feedLoadPromise = null;
+          this.els.feedList.removeAttribute('aria-busy');
+          this.els.feedMore.disabled = false;
+          this.els.feedMore.hidden = this.feedCursor >= this.feedIds.length;
+        }
+      })();
+      return this.feedLoadPromise;
     }
 
     async loadReferences() {
