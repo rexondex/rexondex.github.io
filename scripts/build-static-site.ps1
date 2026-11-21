@@ -79,7 +79,7 @@ $discoveredSectors = @(foreach ($folder in $sectorFolders) {
             if ($files -contains $property.Name) { $descriptions[$property.Name] = $property.Value }
         }
     }
-    [ordered]@{ id = $folder.Name; descriptions = $descriptions; files = $files }
+    [ordered]@{ id = $folder.Name; descriptions = $descriptions; files = $files; thumbnails = @($files | Where-Object { Test-Path -LiteralPath (Join-Path $siteRoot "thumbnails/$($folder.Name)/$_.webp") -PathType Leaf }) }
 })
 if (!$discoveredSectors.Count) { throw 'No photo sectors found. Keep at least media/PIC-1/ (it may be empty) so pictures.html always has a gallery.' }
 $listing = @($ids | Sort-Object | ForEach-Object { "  '$($diaryFiles[$_])'," }) -join "`n"
@@ -359,10 +359,11 @@ for ($i = 0; $i -lt $sectors.Count; $i++) {
         if ($file -notmatch '^[^/\\]+\.(jpe?g|png|webp|gif|avif|heic)$') { throw "Invalid picture filename: $file" }
         if (!(Test-Path -LiteralPath (Join-Path $siteRoot "media/$($sector.id)/$file"))) { throw "Missing picture: $file" }
         $src = "./media/$($sector.id)/$([uri]::EscapeDataString($file))"
+        $thumbnail = if ($sector.thumbnails -contains $file) { "./thumbnails/$($sector.id)/$([uri]::EscapeDataString($file)).webp" } else { $src }
         $alt = ''
         if ($sector.descriptions -and $sector.descriptions.PSObject.Properties[$file]) { $alt = Escape-Html $sector.descriptions.PSObject.Properties[$file].Value }
         $label = if ($alt) { $alt } else { Escape-Html "$($sector.id)/$file 사진 크게 보기" }
-        "<a class=""picture-tile"" href=""$src"" aria-label=""$label""><img src=""$src"" alt=""$alt"" loading=""lazy"" decoding=""async""></a>"
+        "<a class=""picture-tile"" href=""$src"" aria-label=""$label""><img src=""$thumbnail"" alt=""$alt"" loading=""lazy"" decoding=""async""></a>"
     }
     $content = '<div class="picture-toolbar"><nav class="picture-sector-nav" aria-label="사진 섹터">' + ($sectorLinks -join '') + '</nav><span>' + $sector.files.Count + '장</span></div><div class="picture-grid">' + ($images -join "`n") + '</div>'
     $body = Render-Shell '사진' $content '<a href="./">일기장으로 돌아가기</a>'

@@ -426,3 +426,15 @@ GitHub 저장소의 `Settings` → `Pages`에서 다음 설정을 사용합니�
 - Folder: **/(root)**
 
 예전 `#daily-…` 형태의 주소는 개별 일기를 복원하지 않고 사이트 홈으로 이동합니다. 이는 이전 링크의 유입을 홈으로 연결하기 위한 호환 처리입니다.
+
+### 그리드 썸네일 생성
+
+사진 원본은 `media/`에 보관하고, 사진 그리드는 `thumbnails/`의 최대 480px WebP 미리보기를 사용합니다. 확대 보기와 원본 링크는 기존 원본을 사용합니다. 사진을 추가하거나 교체한 뒤에는 Node.js와 `sharp`를 준비하고 아래 명령을 실행한 다음 정적 사이트 생성 스크립트를 실행하세요.
+
+```powershell
+npm install --no-save --no-package-lock sharp
+node scripts/generate-thumbnails.cjs
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-static-site.ps1
+```
+
+썸네일을 생성할 수 없는 형식이나 아직 생성하지 않은 사진은 원본으로 표시됩니다. 생성한 `thumbnails/` 파일도 사이트와 함께 배포해야 합니다.

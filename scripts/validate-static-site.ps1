@@ -55,12 +55,14 @@ for ($i = 0; $i -lt $sectors.Count; $i++) {
     Assert ($galleryHtml.Contains('data-picture-sector="' + $sector.id + '"')) "Wrong gallery state: $gallery"
     $photos = @(Get-ChildItem -LiteralPath (Join-Path $siteRoot "media/$($sector.id)") -File | Where-Object { $_.Name -match '\.(jpe?g|png|webp|gif|avif|heic)$' } | ForEach-Object { $_.Name })
     Assert (Test-SameList @($sector.files) $photos) "Photo list differs from media/$($sector.id)/. Run the static builder."
-    Assert (([regex]::Matches($galleryHtml, '<img\b[^>]*src="\./media/')).Count -eq $photos.Count) "Gallery photo count mismatch: $gallery"
+    Assert (([regex]::Matches($galleryHtml, '<img\b[^>]*src="\./(?:media|thumbnails)/')).Count -eq $photos.Count) "Gallery photo count mismatch: $gallery"
     foreach ($photo in $sector.files) {
         $photoPath = "media/$($sector.id)/$photo"
         Assert (Test-SiteLeaf $photoPath) "Missing photo or incorrect path case: $photoPath"
         $src = './media/' + $sector.id + '/' + [uri]::EscapeDataString($photo)
-        Assert ($galleryHtml.Contains('src="' + $src + '"')) "Photo missing from gallery: $photoPath"
+        $preview = if ($sector.thumbnails -contains $photo) { './thumbnails/' + $sector.id + '/' + [uri]::EscapeDataString($photo) + '.webp' } else { $src }
+        Assert ($galleryHtml.Contains('href="' + $src + '"')) "Original missing from gallery: $photoPath"
+        Assert ($galleryHtml.Contains('src="' + $preview + '"')) "Preview missing from gallery: $photoPath"
         if ($photo -notmatch '\.heic$') { $expectedImages += $siteUrl.AbsoluteUri + $src.Substring(2) }
     }
 }
