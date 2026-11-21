@@ -184,7 +184,7 @@
           id: String(sector.id),
           descriptions: sector.descriptions || {},
           thumbnails: sector.thumbnails || [],
-          files: [...new Set(sector.files.map(String).filter((file) => /^[^/\\]+\.(jpe?g|png|webp|gif|avif|heic)$/i.test(file)))].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))
+          files: [...new Set(sector.files.map(String).filter((file) => /^[^/\\]+\.(jpe?g|png|webp|gif|avif|heic)$/i.test(file)))]
         }))
         .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
       this.activePictureSector = document.body.dataset.pictureSector || this.pictureSectors[0]?.id || '';
@@ -309,7 +309,7 @@
       }
       this.els.pictureCount.textContent = `${sector.files.length}장`;
       this.els.pictureEmpty.hidden = sector.files.length > 0;
-      this.els.pictureGrid.innerHTML = sector.files.map((file, index) => `<a href="${escapeHtml(this.picturePath(sector.id, file))}" class="picture-tile" data-picture-index="${index}" aria-label="${escapeHtml(sector.descriptions[file] || `${sector.id}/${file} 사진 크게 보기`)}"><img src="${escapeHtml(sector.thumbnails.includes(file) ? `./thumbnails/${encodeURIComponent(sector.id)}/${encodeURIComponent(file)}.webp` : this.picturePath(sector.id, file))}" alt="${escapeHtml(sector.descriptions[file] || '')}" loading="lazy" decoding="async"></a>`).join('');
+      this.els.pictureGrid.innerHTML = sector.files.map((file, index) => `<a href="${escapeHtml(this.picturePath(sector.id, file))}" class="picture-tile" data-picture-index="${index}" aria-label="${escapeHtml(sector.descriptions[file] || `${sector.id}/${file} 사진 크게 보기`)}"><img src="${escapeHtml(sector.thumbnails.includes(file) ? `./thumbnails/${encodeURIComponent(sector.id)}/${encodeURIComponent(file)}.webp` : this.picturePath(sector.id, file))}" alt="${escapeHtml(sector.descriptions[file] || '')}" decoding="async"></a>`).join('');
       this.els.pictureGrid.querySelectorAll('img').forEach((image) => image.addEventListener('error', () => {
         const fallback = document.createElement('span');
         fallback.className = 'picture-tile-fallback';

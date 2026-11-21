@@ -47,6 +47,7 @@ try {
   for (const id of ids) diaryDate(id);
   if (!ids.length) fail('No publishable diaries found.');
   const previous = exists(file('pictures.js')) ? readArray(load('pictures.js'), 'PICTURE_SECTORS') : [];
+  const photoOrder = exists(file('picture-order.json')) ? JSON.parse(load('picture-order.json')) : {};
   if (!exists(file('media'))) fail('Missing media/ folder.');
   for (const old of ['picture', 'picutre']) if (exists(file(old))) fail(`Obsolete '${old}/' folder found.`);
   const entries = dirs(file('media'));
@@ -61,6 +62,11 @@ try {
     function nested(dir) { return dirs(dir).some(e => e.isDirectory() ? nested(path.join(dir,e.name)) : imageLike.test(e.name)); }
     if (direct.some(e => e.isDirectory() && nested(file(`media/${id}/${e.name}`)))) fail(`Nested photo folders are not supported: ${id}.`);
     const files = direct.filter(e => e.isFile() && imagePattern.test(e.name)).map(e => e.name).sort(natural).reverse();
+    if (photoOrder[id]) {
+      if (!Array.isArray(photoOrder[id]) || new Set(photoOrder[id]).size !== photoOrder[id].length || photoOrder[id].some(name => typeof name !== 'string')) fail(`Invalid photo order: ${id}.`);
+      const ranks = new Map(photoOrder[id].map((name, i) => [name, i]));
+      files.sort((a, b) => (ranks.get(a) ?? -1) - (ranks.get(b) ?? -1));
+    }
     const prior = previous.find(x => x.id === id)?.descriptions || {}, descriptions = {};
     for (const name of Object.keys(prior).sort()) if (files.includes(name)) descriptions[name] = prior[name];
     return { id, descriptions, files, thumbnails: files.filter(name => exists(file(`thumbnails/${id}/${name}.webp`))) };
@@ -90,7 +96,7 @@ try {
   console.log('[2/4] Rendering static pages in memory...');
   const posts = ids.map((id, i) => {
     const name = `database/${id}.html`, d = parseDiary(load(name), name, id), reference = d.references === null ? '' : `<div class="post-references" aria-label="참고 링크">${d.references}</div>`;
-    const post = `<article class="diary-post" id="daily-${id}" aria-label="${escape(d.longLabel)}">\n  <header><img class="post-avatar" src="./rexondex.jpg" alt="" width="44" height="44" loading="lazy"><div><strong>rexondex</strong><time datetime="${d.iso}">${escape(d.longLabel)}</time></div></header>\n  ${reference}\n  <div class="post-content">${d.content}</div>\n  <footer><a class="post-permalink" href="./${name}">${id} &#183; &#47553;&#53356;</a></footer>\n</article>`;
+    const post = `<article class="diary-post" id="daily-${id}" aria-label="${escape(d.longLabel)}">\n  <header><img class="post-avatar" src="./rexondex.jpg" alt="" width="44" height="44"><div><strong>rexondex</strong><time datetime="${d.iso}">${escape(d.longLabel)}</time></div></header>\n  ${reference}\n  <div class="post-content">${d.content}</div>\n  <footer><a class="post-permalink" href="./${name}">${id} &#183; &#47553;&#53356;</a></footer>\n</article>`;
     let nav = '<a href="./">메인</a> · <a href="./archive.html">전체 일기</a>';
     if (i > 0) nav += ` · <a href="./database/${ids[i-1]}.html">다음 일기</a>`;
     if (i < ids.length-1) nav += ` · <a href="./database/${ids[i+1]}.html">이전 일기</a>`;
@@ -103,9 +109,9 @@ try {
   sectors.forEach((sector, i) => {
     const name = i ? `pictures/${sector.id}.html` : 'pictures.html';
     const navigation = sectors.map((s, j) => `<a href="${j ? `./pictures/${s.id}.html` : './pictures.html'}">${escape(s.id)}</a>`).join('');
-    const images = [...sector.files].sort().reverse().map(f => {
+    const images = sector.files.map(f => {
       const src = `./media/${sector.id}/${encodeURIComponent(f)}`, thumb = sector.thumbnails.includes(f) ? `./thumbnails/${sector.id}/${encodeURIComponent(f)}.webp` : src, alt = escape(sector.descriptions[f] || ''), label = alt || escape(`${sector.id}/${f} 사진 크게 보기`);
-      return `<a class="picture-tile" href="${src}" aria-label="${label}"><img src="${thumb}" alt="${alt}" loading="lazy" decoding="async"></a>`;
+      return `<a class="picture-tile" href="${src}" aria-label="${label}"><img src="${thumb}" alt="${alt}" decoding="async"></a>`;
     });
     const content = `<div class="picture-toolbar"><nav class="picture-sector-nav" aria-label="사진 섹터">${navigation}</nav><span>${sector.files.length}장</span></div><div class="picture-grid">${images.join('\n')}</div>`;
     const entity = { '@type':'CollectionPage', name:`rexondex 사진 ${sector.id}`, url:site+name, inLanguage:'ko' };
