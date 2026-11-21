@@ -271,10 +271,12 @@
       this.els.pictureDialog.addEventListener('click', (event) => { if (event.target === this.els.pictureDialog) this.els.pictureDialog.close(); });
       this.els.pictureDialogImage.addEventListener('load', () => {
         const image = this.els.pictureDialogImage;
+        image.hidden = false;
         const format = image.src.split('.').pop().split(/[?#]/)[0].toUpperCase();
         this.els.pictureDialogSize.textContent = `${image.naturalWidth} × ${image.naturalHeight} px · ${format}`;
       });
       this.els.pictureDialogImage.addEventListener('error', () => {
+        this.els.pictureDialogImage.hidden = true;
         const format = this.els.pictureDialogName.textContent.split('.').pop().toUpperCase();
         this.els.pictureDialogSize.textContent = `미리보기를 지원하지 않을 수 있습니다 · ${format}`;
       });
@@ -325,6 +327,7 @@
       this.els.pictureDialogName.textContent = file;
       this.els.pictureDialogSize.textContent = '이미지 정보를 불러오는 중';
       this.els.pictureDialogOriginal.href = source;
+      image.hidden = true;
       image.alt = sector.descriptions[file] || '';
       image.src = source;
       if (!this.els.pictureDialog.open) this.els.pictureDialog.showModal();

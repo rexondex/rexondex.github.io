@@ -66,6 +66,7 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
 .picture-dialog header button:hover { background: var(--accent-soft); color: var(--accent); }
 .picture-dialog-stage { display: grid; min-height: 120px; max-height: 74vh; max-height: 74dvh; flex: 1 1 auto; place-items: center; overflow: auto; background: var(--bg); }
 .picture-dialog-stage img { display: block; max-width: 100%; max-height: 74vh; max-height: 74dvh; object-fit: contain; }
+.picture-dialog-stage img[hidden] { display: none; }
 .picture-dialog footer { flex-wrap: wrap; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
 .picture-dialog footer span { min-width: 0; overflow-wrap: anywhere; }
 .picture-dialog footer a { flex: 0 0 auto; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; text-decoration: none; }
