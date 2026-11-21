@@ -1,13 +1,36 @@
+## 1. 정적 사이트 빌드
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
+
+## 2. 웹 아카이브 웨이백 머신 등록
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
+
+[S3 API 키](https://archive.org/account/s3.php)
+
+export IA_ACCESS_KEY='발급받은 access key'
+export IA_SECRET_KEY='발급받은 secret key'
+
 # REXONDEX Archive 설계 및 운영 안내
 
 이 문서는 프로젝트를 수정하거나 일기를 추가할 때 참고하는 설계도입니다. 폴더의 역할, 브라우저에서 페이지가 표시되는 과정, 일기·사진 파싱 규칙, SEO 파일 생성 방식, 배포 절차를 설명합니다.
 
 ## 매번 복붙하는 스크립트 명령어
 
-새 일기·사진을 추가하거나 수정한 뒤, **프로젝트 루트 폴더의 PowerShell**에서 아래 명령을 실행합니다.
+Git Bash 예시는 Windows에서 Git Bash와 Windows PowerShell이 설치되어 있고 프로젝트 루트에서 실행하는 경우입니다. Git Bash에서도 `powershell.exe`가 PS1 스크립트를 실행합니다.
+
+새 일기·사진을 추가하거나 수정한 뒤, **프로젝트 루트 폴더의 PowerShell 또는 Git Bash**에서 아래 명령을 실행합니다.
+
+**PowerShell**
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
+```
+
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
 ```
 
 **입력 형식·파싱 규칙·거부 조건의 기준 문서:** [정적 생성 스크립트 핵심 계약서](docs/SEO-SCRIPT-CONTRACT.md)
@@ -16,11 +39,82 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 
 파일을 바꾸지 않고 입력·생성 결과의 정합성과 재생성 필요 여부만 확인하려면:
 
+**PowerShell**
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1 -Check
 ```
 
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1 -Check
+```
+
 실행 중 수집 → 렌더링 → 전체 검사 → 저장의 네 단계가 표시됩니다. 실패하면 `FAIL [단계]`, 오류 원인, 관련 파일과 스크립트 위치를 표시하고 종료 코드 1을 반환합니다. `-Check`에서 오래된 결과가 발견되면 위의 일반 생성 명령을 실행합니다.
+
+
+## Wayback Machine에 페이지 저장
+
+정적 빌드와 배포를 마친 뒤 Internet Archive의 [Save Page Now API](https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA/edit)로 `sitemap.xml`의 페이지 URL을 순서대로 저장 요청할 수 있습니다. 로컬 파일이 아니라 **현재 공개된 사이트**를 수집하므로 먼저 변경 사항을 푸시하고 배포 완료를 확인하세요. 사이트맵의 페이지 `<loc>`만 대상으로 하며 이미지 URL을 별도로 제출하지 않습니다. 페이지에 필요한 리소스의 보존 여부는 Internet Archive의 수집 결과에 따라 달라집니다.
+
+먼저 Internet Archive 계정의 [S3 API 키](https://archive.org/account/s3.php)를 발급받고, 사용할 셸 세션에서 설정합니다. 키는 저장소에 기록하거나 공유하지 마세요.
+
+**PowerShell**
+
+```powershell
+$env:IA_ACCESS_KEY = '발급받은 access key'
+$env:IA_SECRET_KEY = '발급받은 secret key'
+```
+
+**Git Bash**
+
+```bash
+export IA_ACCESS_KEY='발급받은 access key'
+export IA_SECRET_KEY='발급받은 secret key'
+```
+
+요청할 페이지를 먼저 확인하려면 다음 명령을 실행합니다. 이 명령은 네트워크 요청을 보내지 않습니다.
+
+**PowerShell**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1 -ListOnly
+```
+
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1 -ListOnly
+```
+
+실제 저장을 요청하려면 다음 명령을 실행합니다.
+
+**PowerShell**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
+```
+
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
+```
+
+각 페이지를 제출한 뒤 작업 상태가 성공할 때까지 기다립니다. 오류, 제한 또는 시간 초과 시 중단하고 재시작할 번호를 표시합니다. 시간 초과된 작업은 서버에서 계속 진행될 수 있으므로 표시된 작업 ID를 확인한 후 `-StartAt 번호`로 재개하세요. 사이트맵이 바뀌면 번호도 바뀔 수 있습니다. 성공은 API의 작업 상태를 뜻하며 모든 리소스의 보존이나 즉시 검색 가능함을 보장하지 않습니다. 실행 시간은 페이지 수와 서비스 상태에 따라 길어질 수 있습니다. 완료 후 세션의 키를 제거합니다.
+
+**PowerShell**
+
+```powershell
+Remove-Item Env:IA_ACCESS_KEY, Env:IA_SECRET_KEY
+```
+
+**Git Bash**
+
+```bash
+unset IA_ACCESS_KEY IA_SECRET_KEY
+```
 
 ## 한눈에 보는 구조
 
@@ -56,7 +150,18 @@ flowchart TD
 
 위의 스크립트 명령을 실행한 다음 변경 파일을 확인하고 직접 커밋·푸시합니다.
 
+**PowerShell**
+
 ```powershell
+git status --short
+git add .
+git commit -m "Add diary or photos"
+git push
+```
+
+**Git Bash**
+
+```bash
 git status --short
 git add .
 git commit -m "Add diary or photos"
@@ -239,7 +344,15 @@ media/
 
 브라우저 로직을 수정했을 때는 개발용 Node.js 18 이상에서 오류 상황 회귀 테스트를 실행할 수 있습니다. 사이트 생성·배포·방문에는 Node.js가 필요하지 않습니다.
 
+**PowerShell**
+
 ```powershell
+node ./scripts/test-runtime.cjs
+```
+
+**Git Bash**
+
+```bash
 node ./scripts/test-runtime.cjs
 ```
 
@@ -274,8 +387,16 @@ node ./scripts/test-runtime.cjs
 
 배포 전 선택적으로 다음 검사를 실행할 수 있습니다.
 
+**PowerShell**
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
+```
+
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
 ```
 
 이 검사는 파일을 수정하지 않고 sitemap XML, 실제 페이지 존재 여부, canonical·구조화 데이터, 일기 목록, 이미지 경로와 로컬 링크를 확인합니다.
@@ -284,8 +405,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
 
 생성기 수정 후에는 격리된 임시 사이트에서 정상 생성·빈 갤러리·잘못된 날짜·끊어진 경로·대소문자 오류·오래된 출력·이전 폴더명과 실패 시 출력 보존을 검사할 수 있습니다.
 
+**PowerShell**
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-static-site.ps1
+```
+
+**Git Bash**
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-static-site.ps1
 ```
 
 ## GitHub Pages와 예전 링크
