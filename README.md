@@ -1,15 +1,15 @@
-## 1. 정적 사이트 빌드
+## 정적 사이트 빌드
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
 
-## 2. 웹 아카이브 웨이백 머신 등록
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
+## 웹 아카이브 웨이백 머신 등록
 
 [S3 API 키](https://archive.org/account/s3.php)
 
 export IA_ACCESS_KEY='발급받은 access key'
 export IA_SECRET_KEY='발급받은 secret key'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
+unset IA_ACCESS_KEY IA_SECRET_KEY
 
 # REXONDEX Archive 설계 및 운영 안내
 
