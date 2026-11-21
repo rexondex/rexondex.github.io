@@ -390,8 +390,8 @@ const mountProjectFloat = () => {
   root.innerHTML = `
     <div class="project-float-panel" id="project-float-panel" hidden>
       <div class="project-float-heading">DISCOVER</div>
-      <a class="project-float-link" href="https://rexondex.github.io/portfolio" target="_blank" rel="noopener noreferrer">포트폴리오<span class="project-float-sr"> (새 탭에서 열림)</span></a>
-      <a class="project-float-link" href="https://web.archive.org/web/*/https://rexondex.github.io" target="_blank" rel="noopener noreferrer">웨이백 머신<span class="project-float-sr"> (새 탭에서 열림)</span></a>
+      <a class="project-float-link" href="https://web.archive.org/web/*/https://rexondex.github.io" target="_blank" rel="noopener noreferrer">Internet Archive<span class="project-float-sr"> (새 탭에서 열림)</span></a>
+      <a class="project-float-link" href="https://rexondex.github.io/portfolio" target="_blank" rel="noopener noreferrer">Portfolio<span class="project-float-sr"> (새 탭에서 열림)</span></a>
     </div>
     <button class="project-float-toggle" type="button" aria-label="둘러보기 메뉴 열기" aria-controls="project-float-panel" aria-expanded="false"><span class="project-float-toggle-icon" aria-hidden="true"></span></button>`;
   const button = root.querySelector('.project-float-toggle');
