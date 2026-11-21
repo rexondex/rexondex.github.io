@@ -378,6 +378,37 @@
 
 
 
+// Independent project-links overlay; it does not modify the archive's page content.
+const mountProjectFloat = () => {
+  'use strict';
+  const root = document.createElement('div');
+  root.className = 'project-float';
+  root.innerHTML = `
+    <div class="project-float-panel" id="project-float-panel" hidden>
+      <div class="project-float-heading">PROJECTS</div>
+      <a class="project-float-link" href="https://rexondex.github.io/portfolio" target="_blank" rel="noopener noreferrer">포트폴리오<span class="project-float-sr"> (새 탭에서 열림)</span></a>
+    </div>
+    <button class="project-float-toggle" type="button" aria-label="프로젝트 메뉴 열기" aria-controls="project-float-panel" aria-expanded="false"><span class="project-float-toggle-icon" aria-hidden="true"></span></button>`;
+  const button = root.querySelector('.project-float-toggle');
+  const panel = root.querySelector('.project-float-panel');
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? '프로젝트 메뉴 닫기' : '프로젝트 메뉴 열기');
+  };
+  button.addEventListener('click', () => setOpen(panel.hidden));
+  document.addEventListener('click', (event) => {
+    if (!panel.hidden && !root.contains(event.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !panel.hidden) {
+      setOpen(false);
+      button.focus();
+    }
+  });
+  document.body.appendChild(root);
+};
+
   const diaryFiles = window.DIARY_FILES || [];
   const archive = createArchive(diaryFiles);
   const repository = new HttpDiaryRepository('./database', archive.files);
@@ -385,5 +416,6 @@
   const themes = new ThemeManager();
 
   new ArchiveApp({ root: document.querySelector('#app'), archive, repository, store, themes }).mount();
+  mountProjectFloat();
 
 })();
