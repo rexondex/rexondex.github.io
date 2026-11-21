@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "entities": "^9.0.0",
+    "fast-xml-parser": "^5.12.1",
+    "json5": "^2.2.3",
+    "sharp": "^0.35.5"
+  },
+  "scripts": {
+    "build": "node scripts/build-static-site.cjs",
+    "check": "node scripts/build-static-site.cjs --check",
+    "test": "node scripts/test-runtime.cjs && node scripts/test-static-site.cjs && node scripts/test-seo.cjs"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

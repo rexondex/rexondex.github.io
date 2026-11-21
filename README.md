@@ -1,120 +1,47 @@
-## 정적 사이트 빌드
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
-
-## 웹 아카이브 웨이백 머신 등록
-
-[S3 API 키](https://archive.org/account/s3.php)
-
-export IA_ACCESS_KEY='발급받은 access key'
-export IA_SECRET_KEY='발급받은 secret key'
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
-unset IA_ACCESS_KEY IA_SECRET_KEY
-
 # REXONDEX Archive 설계 및 운영 안내
 
-이 문서는 프로젝트를 수정하거나 일기를 추가할 때 참고하는 설계도입니다. 폴더의 역할, 브라우저에서 페이지가 표시되는 과정, 일기·사진 파싱 규칙, SEO 파일 생성 방식, 배포 절차를 설명합니다.
+이 문서는 일기와 사진을 추가하고 정적 사이트를 생성·검증·배포하는 방법을 설명합니다.
 
-## 매번 복붙하는 스크립트 명령어
+## 정적 사이트 빌드
 
-Git Bash 예시는 Windows에서 Git Bash와 Windows PowerShell이 설치되어 있고 프로젝트 루트에서 실행하는 경우입니다. Git Bash에서도 `powershell.exe`가 PS1 스크립트를 실행합니다.
-
-새 일기·사진을 추가하거나 수정한 뒤, **프로젝트 루트 폴더의 PowerShell 또는 Git Bash**에서 아래 명령을 실행합니다.
-
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
-```
-
-**Git Bash**
+Node.js 20.9 이상과 npm을 설치하고 저장소 루트의 Git Bash에서 처음 한 번 의존성을 설치합니다.
 
 ```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
+npm install
 ```
 
-**입력 형식·파싱 규칙·거부 조건의 기준 문서:** [정적 생성 스크립트 핵심 계약서](docs/SEO-SCRIPT-CONTRACT.md)
-
-성공하면 `Updated snapshots and sitemap…` 메시지가 표시됩니다. 그 뒤 변경 파일을 확인하고 직접 커밋·푸시합니다. 이 명령은 Git 명령을 실행하거나 자동으로 푸시하지 않습니다.
-
-파일을 바꾸지 않고 입력·생성 결과의 정합성과 재생성 필요 여부만 확인하려면:
-
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1 -Check
-```
-
-**Git Bash**
+새 일기나 사진을 추가하거나 수정할 때마다 실행합니다. 새 사진과 변경된 사진의 썸네일도 자동 생성됩니다.
 
 ```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1 -Check
+node scripts/build-static-site.cjs
 ```
 
-실행 중 수집 → 렌더링 → 전체 검사 → 저장의 네 단계가 표시됩니다. 실패하면 `FAIL [단계]`, 오류 원인, 관련 파일과 스크립트 위치를 표시하고 종료 코드 1을 반환합니다. `-Check`에서 오래된 결과가 발견되면 위의 일반 생성 명령을 실행합니다.
+생성된 파일을 변경하지 않고 최신 상태를 검사하려면 다음 명령을 실행합니다.
 
+```bash
+node scripts/build-static-site.cjs --check
+```
+
+빌드가 성공하면 변경 파일을 확인해 직접 커밋하고 푸시합니다. 입력 규칙과 검증 범위는 [정적 생성 스크립트 계약서](docs/SEO-SCRIPT-CONTRACT.md)를 참고하세요.
 
 ## Wayback Machine에 페이지 저장
 
-정적 빌드와 배포를 마친 뒤 Internet Archive의 [Save Page Now API](https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA/edit)로 `sitemap.xml`의 페이지 URL을 순서대로 저장 요청할 수 있습니다. 로컬 파일이 아니라 **현재 공개된 사이트**를 수집하므로 먼저 변경 사항을 푸시하고 배포 완료를 확인하세요. 사이트맵의 페이지 `<loc>`만 대상으로 하며 이미지 URL을 별도로 제출하지 않습니다. 페이지에 필요한 리소스의 보존 여부는 Internet Archive의 수집 결과에 따라 달라집니다.
+사이트를 배포한 뒤 Internet Archive의 [S3 API 키](https://archive.org/account/s3.php)를 발급받습니다. 먼저 저장 대상 페이지를 확인할 수 있습니다.
 
-먼저 Internet Archive 계정의 [S3 API 키](https://archive.org/account/s3.php)를 발급받고, 사용할 셸 세션에서 설정합니다. 키는 저장소에 기록하거나 공유하지 마세요.
-
-**PowerShell**
-
-```powershell
-$env:IA_ACCESS_KEY = '발급받은 access key'
-$env:IA_SECRET_KEY = '발급받은 secret key'
+```bash
+node scripts/archive-wayback.cjs --list-only
 ```
 
-**Git Bash**
+실제 저장 요청은 Git Bash 세션에서 키를 설정하고 실행합니다. 키는 저장소에 기록하지 마세요.
 
 ```bash
 export IA_ACCESS_KEY='발급받은 access key'
 export IA_SECRET_KEY='발급받은 secret key'
-```
-
-요청할 페이지를 먼저 확인하려면 다음 명령을 실행합니다. 이 명령은 네트워크 요청을 보내지 않습니다.
-
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1 -ListOnly
-```
-
-**Git Bash**
-
-```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1 -ListOnly
-```
-
-실제 저장을 요청하려면 다음 명령을 실행합니다.
-
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
-```
-
-**Git Bash**
-
-```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/archive-wayback.ps1
-```
-
-각 페이지를 제출한 뒤 작업 상태가 성공할 때까지 기다립니다. 오류, 제한 또는 시간 초과 시 중단하고 재시작할 번호를 표시합니다. 시간 초과된 작업은 서버에서 계속 진행될 수 있으므로 표시된 작업 ID를 확인한 후 `-StartAt 번호`로 재개하세요. 사이트맵이 바뀌면 번호도 바뀔 수 있습니다. 성공은 API의 작업 상태를 뜻하며 모든 리소스의 보존이나 즉시 검색 가능함을 보장하지 않습니다. 실행 시간은 페이지 수와 서비스 상태에 따라 길어질 수 있습니다. 완료 후 세션의 키를 제거합니다.
-
-**PowerShell**
-
-```powershell
-Remove-Item Env:IA_ACCESS_KEY, Env:IA_SECRET_KEY
-```
-
-**Git Bash**
-
-```bash
+node scripts/archive-wayback.cjs
 unset IA_ACCESS_KEY IA_SECRET_KEY
 ```
+
+각 페이지가 성공할 때까지 상태를 확인합니다. 중단되면 출력된 번호를 확인한 뒤 `--start-at 번호`로 재개할 수 있습니다. `--poll-seconds`, `--timeout-seconds`, `--site-root`도 지정할 수 있습니다. 시간 초과된 작업은 서버에서 계속 진행될 수 있습니다.
 
 ## 한눈에 보는 구조
 
@@ -123,7 +50,7 @@ flowchart TD
     Diary[database/YYMMDD.html<br/>일기 HTML 및 본문 원본]
     Photos[media/섹터/사진파일<br/>사진 원본]
     Descriptions[pictures.js<br/>사진 설명]
-    Generator[scripts/build-static-site.ps1<br/>수집 · 파싱 · 정적 페이지 생성]
+    Generator[scripts/build-static-site.cjs<br/>수집 · 파싱 · 정적 페이지 생성]
     DiaryList[database.js<br/>일기 파일 목록]
     PhotoList[pictures.js<br/>사진 파일 목록 + 설명]
     Pages[index · archive · diary · gallery HTML]
@@ -150,15 +77,6 @@ flowchart TD
 
 위의 스크립트 명령을 실행한 다음 변경 파일을 확인하고 직접 커밋·푸시합니다.
 
-**PowerShell**
-
-```powershell
-git status --short
-git add .
-git commit -m "Add diary or photos"
-git push
-```
-
 **Git Bash**
 
 ```bash
@@ -168,11 +86,11 @@ git commit -m "Add diary or photos"
 git push
 ```
 
-스크립트는 Git 명령을 실행하지 않습니다. 별도 패키지 설치나 빌드 도구도 필요하지 않습니다. GitHub Pages는 `main` 브랜치의 루트 폴더를 배포 소스로 사용합니다. 사용자 정의 Actions 워크플로는 없지만, GitHub가 Pages 배포를 위해 관리하는 작업은 Actions 화면에 보일 수 있습니다.
+스크립트는 Git 명령을 실행하지 않습니다. 로컬 빌드에는 Node.js와 npm 의존성이 필요하며 방문자에게는 필요하지 않습니다. GitHub Pages는 `main` 브랜치의 루트 폴더를 배포 소스로 사용합니다. 사용자 정의 Actions 워크플로는 없지만, GitHub가 Pages 배포를 위해 관리하는 작업은 Actions 화면에 보일 수 있습니다.
 
 ## 페이지가 만들어지는 과정
 
-1. `build-static-site.ps1`이 `database/`의 일기 파일과 `media/` 아래 섹터 폴더·사진을 검색합니다.
+1. `build-static-site.cjs`이 `database/`의 일기 파일과 `media/` 아래 섹터 폴더·사진을 검색합니다.
 2. 일기 날짜와 사진 파일 목록을 검증하고, 기존 사진 설명을 읽습니다.
 3. `database.js`, `pictures.js`의 목록을 실제 파일 구성에 맞춰 다시 생성합니다.
 4. 일기별 HTML 페이지와 홈·전체 일기·사진 갤러리의 초기 정적 본문을 만듭니다.
@@ -183,7 +101,7 @@ git push
 
 이 과정에서 HTML 페이지, 메타 정보, 파일 목록, 사이트맵은 자동으로 다시 작성됩니다. 잘못된 입력이 발견되면 생성 파일을 쓰기 전에 중단합니다. 실제 파일 교체 단계에서 오류가 나면 기존 출력 파일을 복원하며, 복원까지 실패한 경우 복구용 백업 경로를 오류에 표시합니다.
 
-### `build-static-site.ps1` 내부 처리 단위
+### `build-static-site.cjs` 내부 처리 단위
 
 | 순서 | 처리 | 입력과 결과 |
 |---|---|---|
@@ -195,7 +113,7 @@ git push
 | 6. 페이지 생성 | 일기별 페이지, 최근 일기 홈, 전체 일기, 섹터별 사진 페이지를 만들고 각 페이지의 메타 정보와 JSON-LD를 채웁니다. | 정적 HTML 파일 |
 | 7. 사이트맵 작성 | 모든 주요 페이지 및 HEIC를 제외한 지원 이미지 주소를 모아 XML로 기록합니다. | `sitemap.xml` |
 
-스크립트의 `Read-DiarySection`은 중첩 `<div>`를 고려해 해당 본문 영역의 닫는 태그를 찾습니다. `Extract-DiaryLinkMarkers`는 URL 링크 표식을 수집해 참고 링크 영역으로 옮기고, `Convert-PlainDiaryText`는 순수 텍스트 본문만 문단 형태로 바꿉니다. `Render-Shell`은 공통 화면 틀을 만들며 `Render-Page`는 canonical·메타 태그·JSON-LD·스크립트 참조를 포함한 HTML 문서로 저장합니다.
+`site-common.cjs`의 `section`은 중첩 `<div>`의 닫는 태그를 찾고 `links`와 `parseDiary`는 링크 표식과 본문을 처리합니다. 생성기의 `shell`과 `page`는 공통 화면 틀과 메타 정보가 포함된 HTML 문서를 만듭니다.
 
 페이지를 만들기 전에 일기 날짜, 섹션 개수, HTML 태그 짝, 링크 표기, 사진 경로, 홈 템플릿을 검사합니다. 문서의 형식이 약속을 벗어나면 파일명과 문제가 된 항목, 수정 방법을 표시하고 중단합니다. 임시 생성물은 검사가 모두 끝난 뒤에만 교체하므로, 잘못된 일기 하나 때문에 나머지 사이트 파일이 일부만 갱신되는 일을 방지합니다.
 
@@ -243,7 +161,7 @@ HTML 예시:
 
 `a`, `abbr`, `article`, `aside`, `b`, `blockquote`, `br`, `cite`, `code`, `dd`, `del`, `div`, `dl`, `dt`, `em`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `i`, `img`, `kbd`, `li`, `mark`, `ol`, `p`, `pre`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `section`, `small`, `span`, `strong`, `sub`, `sup`, `table`, `tbody`, `td`, `th`, `thead`, `time`, `tr`, `u`, `ul`, `var`, `wbr`.
 
-`<a>`에는 `href`, `<img>`에는 `src`를 지정해야 합니다. `<script>`, `<style>`, `<iframe>` 등 페이지 실행·틀을 바꿀 수 있는 요소, `onclick` 같은 이벤트 속성, 인라인 `style`, `javascript:` 주소는 거부합니다. 새 태그가 꼭 필요하다면 `scripts/build-static-site.ps1`의 `Assert-DiaryMarkup` 허용 목록에 의도와 안전성을 검토한 뒤 추가합니다.
+`<a>`에는 `href`, `<img>`에는 `src`를 지정해야 합니다. `<script>`, `<style>`, `<iframe>` 등 페이지 실행·틀을 바꿀 수 있는 요소, `onclick` 같은 이벤트 속성, 인라인 `style`, `javascript:` 주소는 거부합니다. 새 태그가 꼭 필요하다면 `scripts/site-common.cjs`의 `assertMarkup` 허용 목록에 의도와 안전성을 검토한 뒤 추가합니다.
 
 ### 스크립트가 읽는 HTML 영역
 
@@ -314,10 +232,10 @@ media/
 |---|---|---|
 | `database/YYMMDD.html` | 일기 본문 원본이자 일기별 정적 페이지 | 본문 편집 |
 | `media/섹터/` | 사진 원본 | 파일 추가·삭제 |
-| `scripts/build-static-site.ps1` | 원본 검색, 파싱, 검증, 정적 HTML·메타·사이트맵 생성 | 동작 변경 시 편집 |
+| `scripts/build-static-site.cjs` | 원본 검색, 파싱, 검증, 정적 HTML·메타·사이트맵 생성 | 동작 변경 시 편집 |
 | `docs/SEO-SCRIPT-CONTRACT.md` | 입력 인터페이스·생성 결과·거부·복구 규칙의 기준 설계 문서 | 기능 계약 변경 시 함께 편집 |
-| `scripts/manifest.ps1` | `pictures.js` 같은 JavaScript 배열을 실행하지 않고 읽고, 목록 형식을 검증하는 공통 함수 | 보통 편집하지 않음 |
-| `scripts/test-seo.ps1` | 생성된 페이지·canonical·구조화 데이터·사이트맵·로컬 링크를 빠르게 확인 | 선택적으로 실행 |
+| `scripts/manifest.cjs` | `pictures.js` 같은 JavaScript 배열을 실행하지 않고 읽고, 목록 형식을 검증하는 공통 함수 | 보통 편집하지 않음 |
+| `scripts/test-seo.cjs` | 생성된 페이지·canonical·구조화 데이터·사이트맵·로컬 링크를 빠르게 확인 | 선택적으로 실행 |
 | `database.js` | 브라우저가 사용하는 일기 HTML 파일 목록 | 자동 생성, 직접 편집하지 않음 |
 | `pictures.js` | 브라우저가 사용하는 섹터·사진 파일 목록과 사진 설명 | 파일 목록 자동 생성, `descriptions`는 직접 편집 가능 |
 | `index.html` | 홈 피드의 SEO용 초기 HTML 및 앱 진입점 | 자동 생성 |
@@ -342,13 +260,7 @@ media/
 
 브라우저가 `localStorage` 접근·읽기·쓰기를 차단해도 앱과 테마 선택은 동작합니다. 저장할 수 없는 환경에서는 선택한 테마를 현재 페이지에서만 유지합니다. 이 처리는 모두 브라우저 코드이며 GitHub Actions나 서버를 사용하지 않습니다.
 
-브라우저 로직을 수정했을 때는 개발용 Node.js 18 이상에서 오류 상황 회귀 테스트를 실행할 수 있습니다. 사이트 생성·배포·방문에는 Node.js가 필요하지 않습니다.
-
-**PowerShell**
-
-```powershell
-node ./scripts/test-runtime.cjs
-```
+브라우저 로직을 수정했을 때는 Node.js에서 오류 상황 회귀 테스트를 실행할 수 있습니다. 생성된 사이트를 방문하는 데는 Node.js가 필요하지 않습니다.
 
 **Git Bash**
 
@@ -387,16 +299,10 @@ node ./scripts/test-runtime.cjs
 
 배포 전 선택적으로 다음 검사를 실행할 수 있습니다.
 
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
-```
-
 **Git Bash**
 
 ```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
+node scripts/test-seo.cjs
 ```
 
 이 검사는 파일을 수정하지 않고 sitemap XML, 실제 페이지 존재 여부, canonical·구조화 데이터, 일기 목록, 이미지 경로와 로컬 링크를 확인합니다.
@@ -405,16 +311,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-seo.ps1
 
 생성기 수정 후에는 격리된 임시 사이트에서 정상 생성·빈 갤러리·잘못된 날짜·끊어진 경로·대소문자 오류·오래된 출력·이전 폴더명과 실패 시 출력 보존을 검사할 수 있습니다.
 
-**PowerShell**
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-static-site.ps1
-```
-
 **Git Bash**
 
 ```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/test-static-site.ps1
+node scripts/test-static-site.cjs
 ```
 
 ## GitHub Pages와 예전 링크
@@ -429,12 +329,4 @@ GitHub 저장소의 `Settings` → `Pages`에서 다음 설정을 사용합니�
 
 ### 그리드 썸네일 생성
 
-사진 원본은 `media/`에 보관하고, 사진 그리드는 `thumbnails/`의 최대 480px WebP 미리보기를 사용합니다. 확대 보기와 원본 링크는 기존 원본을 사용합니다. 사진을 추가하거나 교체한 뒤에는 Node.js와 `sharp`를 준비하고 아래 명령을 실행한 다음 정적 사이트 생성 스크립트를 실행하세요.
-
-```powershell
-npm install --no-save --no-package-lock sharp
-node scripts/generate-thumbnails.cjs
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-static-site.ps1
-```
-
-썸네일을 생성할 수 없는 형식이나 아직 생성하지 않은 사진은 원본으로 표시됩니다. 생성한 `thumbnails/` 파일도 사이트와 함께 배포해야 합니다.
+Node.js 20.9 이상과 npm을 설치하고 최초 한 번 `npm install`을 실행하세요. 사이트 빌드는 새 사진과 변경된 사진의 최대 480px WebP 썸네일을 자동 생성합니다. 생성된 `thumbnails/` 파일도 함께 배포해야 합니다. 확대 보기와 원본 링크는 원본을 사용합니다. 검사 모드에서는 파일을 변경하지 않고 누락되거나 오래된 썸네일을 보고합니다.

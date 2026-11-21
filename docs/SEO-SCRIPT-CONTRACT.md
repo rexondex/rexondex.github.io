@@ -1,27 +1,27 @@
 # 정적 사이트 생성 스크립트 계약서
 
-이 문서는 `scripts/build-static-site.ps1`이 입력으로 받아들이는 형식, 입력을 변환하는 규칙, 생성하는 결과, 거부해야 하는 문서, 파일을 안전하게 갱신하는 경계를 정의합니다. **새 일기·사진을 작성하거나 스크립트를 수정할 때 따르는 프로젝트의 기준 규격**입니다.
+이 문서는 `scripts/build-static-site.cjs`이 입력으로 받아들이는 형식, 입력을 변환하는 규칙, 생성하는 결과, 거부해야 하는 문서, 파일을 안전하게 갱신하는 경계를 정의합니다. **새 일기·사진을 작성하거나 스크립트를 수정할 때 따르는 프로젝트의 기준 규격**입니다.
 
 스크립트 동작과 이 계약이 달라지면 둘 중 하나를 임의로 무시하지 않습니다. 의도한 동작을 정하고 스크립트와 이 문서를 함께 수정한 뒤 기존 콘텐츠로 생성·검사해야 합니다. README는 사용 안내이고, 입력·파싱·출력에 관한 세부 약속은 이 문서가 기준입니다.
 
 ## 1. 목적과 범위
 
-`build-static-site.ps1`은 로컬 파일을 읽어 GitHub Pages에 올릴 정적 파일을 생성하는 스크립트입니다.
+`build-static-site.cjs`은 로컬 파일을 읽어 GitHub Pages에 올릴 정적 파일을 생성하는 스크립트입니다.
 
-- 서버, 데이터베이스, 패키지 설치, 사용자 정의 GitHub Actions, Git 훅에 의존하지 않습니다.
+- 로컬 빌드에는 Node.js 20.9 이상과 `npm install`로 설치한 패키지가 필요합니다. 방문자는 Node.js가 필요하지 않으며 별도 서버, 데이터베이스, 사용자 정의 GitHub Actions 또는 Git 훅도 사용하지 않습니다.
 - 파일을 읽고 정적 HTML·목록·사이트맵을 생성합니다.
 - Git add, commit, push 또는 배포를 실행하지 않습니다. 사용자가 생성 결과를 검토하고 직접 커밋·푸시합니다.
 - 파일 형식이 계약을 지키지 않거나 생성 결과가 불완전할 가능성이 있으면 이유와 수정 방향을 표시하고 중단합니다.
 
 실행 명령:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.ps1
+```bash
+node scripts/build-static-site.cjs
 ```
 
 프로젝트 루트에서 실행합니다. `-SiteRoot` 매개변수는 별도 복사본이나 격리된 콘텐츠를 처리할 때만 사용합니다.
 
-`-Check`는 모든 입력을 읽고 메모리에서 렌더링·검증한 후 디스크의 생성 결과와 비교합니다. 파일을 쓰지 않으며, 재생성이 필요하면 변경 대상 경로와 일반 생성 명령을 안내하고 종료 코드 1을 반환합니다. 정상 종료 코드는 0입니다. 실행 진행은 수집·렌더링·검증·저장의 네 단계로 표시하고, 오류에는 실패 단계·원인·스크립트 위치를 포함합니다.
+`--check`는 모든 입력을 읽고 메모리에서 렌더링·검증한 후 디스크의 생성 결과와 비교합니다. 파일을 쓰지 않으며, 썸네일 또는 생성 결과가 오래되면 종료 코드 1을 반환합니다. 정상 종료 코드는 0입니다. 실행 진행은 수집·렌더링·검증·저장의 네 단계로 표시합니다.
 
 ## 2. 입력 계약
 
@@ -84,7 +84,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 - `<a>`에는 `href`, `<img>`에는 `src`가 필요합니다.
 - `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, `<form>`과 문서 틀 태그(`<html>`, `<head>`, `<body>`, `<base>`, `<meta>`, `<link>`)는 본문 안에서 거부합니다.
 - `onerror`, `onclick` 등 이벤트 속성, 인라인 `style`, `srcdoc`, `javascript:` URL은 거부합니다.
-- 허용 목록 밖의 태그는 자동으로 제거하거나 임의 변환하지 않고 거부합니다. 새 태그가 필요하면 안전성과 생성 결과를 검토한 후 코드의 `Assert-DiaryMarkup` 허용 목록과 이 문서를 함께 수정합니다.
+- 허용 목록 밖의 태그는 자동으로 제거하거나 임의 변환하지 않고 거부합니다. 새 태그가 필요하면 안전성과 생성 결과를 검토한 후 `scripts/site-common.cjs`의 `assertMarkup` 허용 목록과 이 문서를 함께 수정합니다.
 - HTML 태그처럼 보이는 텍스트를 본문에 표시하려면 `<`와 `>`를 `&lt;`, `&gt;`로 작성합니다.
 
 ### 2.5 본문 링크 표식
@@ -128,7 +128,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 
 ## 3. 생성 결과 계약
 
-`build-static-site.ps1`은 입력을 기준으로 다음 결과를 생성하거나 갱신합니다.
+`build-static-site.cjs`은 입력을 기준으로 다음 결과를 생성하거나 갱신합니다.
 
 | 출력 | 생성 내용 |
 |---|---|
@@ -154,13 +154,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 - 추가 일기 묶음은 전부 성공했을 때만 순서대로 추가하고 커서를 이동합니다. 실패하면 기존 본문과 커서를 유지하고 버튼을 다시 활성화해 같은 묶음을 재시도합니다. 진행 중인 중복 호출은 하나의 Promise를 공유합니다.
 - HTTP 오류·네트워크 실패·일기 본문 파싱 실패는 처리되지 않은 Promise 오류로 전파하지 않습니다. 상세 원인은 콘솔에 기록하고 사용자에게는 재시도 버튼을 제공합니다.
 - `localStorage` 객체 접근, `getItem`, `setItem` 실패는 앱 초기화를 중단하지 않습니다. 저장할 수 없어도 현재 페이지에서 테마와 기기 테마 추종은 동작합니다.
-- `scripts/test-runtime.cjs`는 Node.js 기본 테스트 도구와 VM으로 저장소 차단·SSG 본문 재사용·요청 실패·재시도·동시 호출을 검증합니다. 제어된 테스트 본문에 한해 DOM 파싱을 대체하므로 실제 브라우저 레이아웃 검사는 별도입니다. 개발용 테스트 외에 Node.js나 Actions 의존성을 추가하지 않습니다.
+- `scripts/test-runtime.cjs`는 Node.js 기본 테스트 도구와 VM으로 저장소 차단·SSG 본문 재사용·요청 실패·재시도·동시 호출을 검증합니다. 제어된 테스트 본문에 한해 DOM 파싱을 대체하므로 실제 브라우저 레이아웃 검사는 별도입니다.
 
-스크립트는 발견한 파일을 순서대로 즉시 덮어쓰지 않습니다.
+썸네일은 다른 입력을 검사하기 전에 생성되므로 이후 빌드가 실패해도 생성된 썸네일이 남을 수 있습니다. 정적 페이지와 목록은 발견한 파일을 순서대로 즉시 덮어쓰지 않습니다.
 
 1. 모든 일기·사진·템플릿을 검사합니다.
 2. 생성할 파일 내용을 메모리에 구성합니다.
-3. `validate-static-site.ps1`로 메모리의 생성 결과를 검사합니다. 일기·사진 manifest와 실제 폴더, 갤러리 상태·사진 수·경로, 사이트맵 전체 페이지·지원 이미지 집합, canonical·공유 URL·구조화 데이터·제목, 로컬 href/src 대상과 경로 대소문자를 확인합니다. 모든 검사가 끝난 다음 같은 파일 경로에 임시 파일과 기존 파일의 백업을 준비합니다.
+3. `validate-static-site.cjs`로 메모리의 생성 결과를 검사합니다. 일기·사진 manifest와 실제 폴더, 갤러리 상태·사진 수·경로, 사이트맵 전체 페이지·지원 이미지 집합, canonical·공유 URL·구조화 데이터·제목, 로컬 href/src 대상과 경로 대소문자를 확인합니다. 모든 검사가 끝난 다음 같은 파일 경로에 임시 파일과 기존 파일의 백업을 준비합니다.
 4. 임시 파일을 출력 경로에 교체합니다.
 5. 교체 중 오류가 생기면 기존 파일을 백업에서 복원합니다. 복원도 실패하면 백업 파일 경로를 오류에 표시하고 백업을 보존합니다.
 
@@ -181,22 +181,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-static-site.
 
 오류 메시지는 가능한 경우 파일 경로와 기대 형식, 수정 방법을 포함해야 합니다. 코드가 안전하게 처리할 수 없는 입력을 조용히 무시하거나 임의로 정규화해서는 안 됩니다.
 
-`test-seo.ps1 -SiteRoot 경로`는 같은 검증기를 사용해 저장된 결과만 검사합니다. 외부 HTTP(S) 링크의 접속 여부(같은 호스트의 별도 저장소 포함), 이미지 파일의 디코딩, JavaScript 실행 및 화면 배치는 검사 범위 밖입니다. `test-static-site.ps1`은 작은 임시 사이트에서 성공·거부 사례와 실패 시 출력 보존을 검증하고 임시 폴더를 정리합니다.
+`test-seo.cjs --site-root 경로`는 같은 검증기를 사용해 저장된 결과만 검사합니다. 외부 HTTP(S) 링크의 접속 여부(같은 호스트의 별도 저장소 포함), 이미지 파일의 디코딩, JavaScript 실행 및 화면 배치는 검사 범위 밖입니다. `test-static-site.cjs`은 작은 임시 사이트에서 성공·거부 사례와 실패 시 출력 보존을 검증하고 임시 폴더를 정리합니다.
 
 ## 5. 변경 시 지켜야 할 원칙
 
 새 입력 형식이나 생성 기능을 추가할 때 다음 항목을 함께 갱신합니다.
 
 1. 이 계약서의 입력 규칙·변환·실패 조건
-2. `scripts/build-static-site.ps1`의 파서·검증·출력
+2. `scripts/build-static-site.cjs`의 파서·검증·출력
 3. `README.md`의 사용자 작성법과 명령 안내
-4. `scripts/test-seo.ps1` 또는 격리된 입력으로 성공 사례와 거부 사례
+4. `scripts/test-seo.cjs` 또는 격리된 입력으로 성공 사례와 거부 사례
 
 성공 사례만 확인하지 않습니다. 계약 위반 사례가 명확한 오류로 거부되고, 오류가 났을 때 생성 대상 파일이 변경되지 않는지도 확인합니다.
 
 ## 6. 관련 문서와 코드
 
 - 상위 운영·설계 안내: [`README.md`](../README.md)
-- 생성기: [`scripts/build-static-site.ps1`](../scripts/build-static-site.ps1)
-- 공통 manifest 파서: [`scripts/manifest.ps1`](../scripts/manifest.ps1)
-- 정적 SEO 검사: [`scripts/test-seo.ps1`](../scripts/test-seo.ps1)
+- 생성기: [`scripts/build-static-site.cjs`](../scripts/build-static-site.cjs)
+- 공통 manifest 파서: [`scripts/manifest.cjs`](../scripts/manifest.cjs)
+- 정적 SEO 검사: [`scripts/test-seo.cjs`](../scripts/test-seo.cjs)
