@@ -389,16 +389,17 @@ const mountProjectFloat = () => {
   root.className = 'project-float';
   root.innerHTML = `
     <div class="project-float-panel" id="project-float-panel" hidden>
-      <div class="project-float-heading">PROJECTS</div>
+      <div class="project-float-heading">DISCOVER</div>
       <a class="project-float-link" href="https://rexondex.github.io/portfolio" target="_blank" rel="noopener noreferrer">포트폴리오<span class="project-float-sr"> (새 탭에서 열림)</span></a>
+      <a class="project-float-link" href="https://web.archive.org/web/*/https://rexondex.github.io" target="_blank" rel="noopener noreferrer">웨이백 머신<span class="project-float-sr"> (새 탭에서 열림)</span></a>
     </div>
-    <button class="project-float-toggle" type="button" aria-label="프로젝트 메뉴 열기" aria-controls="project-float-panel" aria-expanded="false"><span class="project-float-toggle-icon" aria-hidden="true"></span></button>`;
+    <button class="project-float-toggle" type="button" aria-label="둘러보기 메뉴 열기" aria-controls="project-float-panel" aria-expanded="false"><span class="project-float-toggle-icon" aria-hidden="true"></span></button>`;
   const button = root.querySelector('.project-float-toggle');
   const panel = root.querySelector('.project-float-panel');
   const setOpen = (open) => {
     panel.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
-    button.setAttribute('aria-label', open ? '프로젝트 메뉴 닫기' : '프로젝트 메뉴 열기');
+    button.setAttribute('aria-label', open ? '둘러보기 메뉴 닫기' : '둘러보기 메뉴 열기');
   };
   button.addEventListener('click', () => setOpen(panel.hidden));
   document.addEventListener('click', (event) => {

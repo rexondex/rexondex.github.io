@@ -153,6 +153,7 @@ svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width:
 .project-float-panel { width: min(260px, calc(100vw - 32px)); padding: 19px 20px 12px; border: 1px solid var(--text); border-radius: 6px; background: var(--text); color: var(--surface); box-shadow: 0 16px 48px rgb(0 0 0 / 18%); }
 .project-float-heading { padding-bottom: 15px; border-bottom: 1px solid color-mix(in srgb, var(--surface) 25%, transparent); color: color-mix(in srgb, var(--surface) 65%, transparent); font-size: 10px; font-weight: 700; letter-spacing: .14em; }
 .project-float-link { display: flex; align-items: center; min-height: 56px; padding: 12px 2px; color: inherit; font-size: 15px; font-weight: 600; text-decoration: none; transition: opacity var(--transition); }
+.project-float-link + .project-float-link { border-top: 1px solid color-mix(in srgb, var(--surface) 25%, transparent); }
 .project-float-link:hover { opacity: .65; }
 .project-float-link:focus-visible { outline-color: currentColor; outline-offset: -2px; }
 /* Keep a previously cached version of the menu markup readable during updates. */
