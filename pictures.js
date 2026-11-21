@@ -171,8 +171,13 @@ window.PICTURE_SECTORS = [
 
                          },
         "files":  [
+                      "IMG_0376.HEIC",
+                      "IMG_0373.HEIC",
                       "bafkreihzygo2bbgaihsqv2feorvzwrvb2zjduyx6l6q7ruxlf5xrfdh7v4.webp",
-                      "bafkreifqm5acwbupqnuwqydh77rn2ubtynio3hkzmn3qbbvruwhs2yl35q.webp"
+                      "bafkreifqm5acwbupqnuwqydh77rn2ubtynio3hkzmn3qbbvruwhs2yl35q.webp",
+                      "20260804_175913.jpg",
+                      "20260730_123646_HDR.jpg",
+                      "20260430_111851.jpg"
                   ]
     }
 ];
