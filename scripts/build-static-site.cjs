@@ -5,6 +5,10 @@ const argv = process.argv.slice(2), rootIndex = argv.indexOf('--site-root');
 const root = path.resolve(rootIndex < 0 ? path.join(__dirname, '..') : argv[rootIndex + 1]);
 const check = argv.includes('--check');
 const pending = new Map(), file = p => path.join(root, p), load = p => read(file(p));
+// Git checkouts may use CRLF on Windows; line-ending differences alone do not
+// change generated HTML and should not cause a rewrite or a stale-build error.
+const normalizeNewlines = value => value.replace(/\r\n/g, '\n');
+const isCurrent = (name, content) => exists(file(name)) && fs.statSync(file(name)).isFile() && normalizeNewlines(load(name)) === normalizeNewlines(content);
 function fail(message) { throw Error(message); }
 function shell(heading, body, nav) { return `<div class="social-shell">
   <header class="mobile-header"><a href="./">rexondex</a></header>
@@ -22,6 +26,7 @@ function commit() {
     for (const [name, content] of pending) {
       const target = file(name), temp = `${target}.seo-tmp-${id}`, backup = `${target}.seo-backup-${id}`;
       if (exists(target) && fs.statSync(target).isDirectory()) fail(`Cannot write generated file '${name}' because a folder exists there.`);
+      if (isCurrent(name, content)) continue;
       fs.mkdirSync(path.dirname(target), { recursive: true });
       const item = { target, temp, backup, had: exists(target), applied: false }; transactions.push(item);
       fs.writeFileSync(temp, content); if (item.had) fs.copyFileSync(target, backup);
@@ -121,7 +126,7 @@ try {
   pending.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls.join('\n')}\n</urlset>\n`);
   console.log('[3/4] Checking pages, manifests, media and local links...'); validate(root, pending);
   if (check) {
-    const changed = [...pending].filter(([name, content]) => !exists(file(name)) || load(name) !== content).map(([name]) => name);
+    const changed = [...pending].filter(([name, content]) => !isCurrent(name, content)).map(([name]) => name);
     if (changed.length) fail(`Generated output is out of date: ${changed.join(', ')}. Run the builder without --check.`);
     console.log('[4/4] PASS: generated files are current; no files changed.');
   } else { console.log('[4/4] Saving validated pages with rollback protection...'); commit(); console.log(`Updated snapshots and sitemap for ${ids.length} diaries and ${sectors.length} galleries.`); }

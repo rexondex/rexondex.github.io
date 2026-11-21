@@ -22,6 +22,20 @@ try {
   put('database/261101.html','<p>Fixture diary.</p>');
   build(); if (!fs.existsSync(target('thumbnails/PIC-1/photo.jpg.webp'))) throw Error('Thumbnail not created.');
   build('',true);
+  // A Windows checkout can contain CRLF even though the builder emits LF.
+  // Neither check mode nor a normal rebuild should alter otherwise identical files.
+  const generated = ['index.html','archive.html','pictures.html','database.js','pictures.js','sitemap.xml','database/261101.html'];
+  for (const name of generated) {
+    const text = fs.readFileSync(target(name), 'utf8').replace(/\r?\n/g, '\r\n');
+    put(name, text);
+  }
+  const beforeRebuild = snapshot();
+  build('', true);
+  build();
+  if (snapshot() !== beforeRebuild) throw Error('Unchanged CRLF output was rewritten.');
+  const beforeSecondBuild = snapshot();
+  build();
+  if (snapshot() !== beforeSecondBuild) throw Error('Repeated build changed generated files.');
   const image = target('media/PIC-1/photo.jpg');
   fs.utimesSync(image, new Date(Date.now() + 10000), new Date(Date.now() + 10000));
   build('thumbnail(s) are missing or out of date', true);
