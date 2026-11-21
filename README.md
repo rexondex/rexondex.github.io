@@ -1,3 +1,5 @@
+node scripts/build-static-site.cjs
+
 # REXONDEX Archive 설계 및 운영 안내
 
 이 문서는 일기와 사진을 추가하고 정적 사이트를 생성·검증·배포하는 방법을 설명합니다.
